@@ -1,0 +1,45 @@
+{
+  "name": "beautiful-portfolio",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.1",
+    "@radix-ui/react-toast": "^1.2.10",
+    "@tailwindcss/vite": "^4.1.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "drizzle-orm": "^0.44.5",
+    "express": "^5.1.0",
+    "lucide-react": "^0.501.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.5.1",
+    "tailwind-merge": "^3.2.0",
+    "tailwindcss": "^4.1.4"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "drizzle-kit": "^0.31.4",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.34.3",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "eslint-plugin-react-refresh": "^0.4.7",
+    "vite": "^5.3.4"
+  },
+  "description": "<div align=\"center\">   <br />   <a href=\"https://youtu.be/YOUR_VIDEO_ID\" target=\"_blank\">     <img src=\"./banner.png\" alt=\"Portfolio Website Banner\">   </a>   <br />   <div>     <img src=\"https://img.shields.io/badge/-React-61DAFB?style=for-the-badge&logo=react&logoColor=black\" alt=\"React\" />     <img src=\"https://img.shields.io/badge/-TailwindCSS-06B6D4?style=for-the-badge&logo=tailwindcss\" alt=\"Tailwind CSS\" />     <img src=\"https://img.shields.io/badge/-Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white\" alt=\"Vite\" />     <img src=\"https://img.shields.io/badge/-Lucide Icons-FD4D4D?style=for-the-badge&logo=lucide\" alt=\"Lucide Icons\" />     <img src=\"https://img.shields.io/badge/-Radix UI-9D4EDD?style=for-the-badge&logo=data:image/svg+xml;base64...\" alt=\"Radix UI\" />   </div>   <h3 align=\"center\">Create a Stunning Developer Portfolio with Animations, Dark Mode, and Projects Showcase</h3>   <div align=\"center\">     Follow the full video tutorial on      <a href=\"https://youtu.be/YOUR_VIDEO_ID\" target=\"_blank\"><b>YouTube</b></a>   </div>   <br /> </div>",
+  "main": "vite.config.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
