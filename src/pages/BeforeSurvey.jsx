@@ -83,8 +83,8 @@ export const BeforeSurvey = () => {
     }
 
     try {
-      // Send data to backend
-      const res = await fetch("http://localhost:5000/api/survey/submit", {
+      // Use relative path for Vercel deployment
+      const res = await fetch("/api/survey", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...formData, isException })
