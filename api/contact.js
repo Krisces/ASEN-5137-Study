@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     from: process.env.SMTP_USER, // shows the submitter’s email
     replyTo: email, 
     to: [
-      "kristinboeckmann3@gmail.com"
+      "krbo9035@colorado.edu"
     ],
     subject: `New contact form message from ${name}`,
     text: message,
