@@ -22,7 +22,10 @@ export const ContactSection = () => {
   };
 
   return (
-    <section id="contact" className="py-16 px-4 relative bg-secondary/30">
+    <section
+      id="contact"
+      className="py-16 px-4 relative bg-secondary/30 pb-20" // 👈 added bottom padding
+    >
       <div className="container mx-auto max-w-5xl">
         <h2 className="text-3xl md:text-4xl font-bold mb-2 text-center">
           Get In <span className="text-primary">Touch</span>
@@ -68,7 +71,6 @@ export const ContactSection = () => {
             </div>
           </div>
         </div>
-
 
         {/* Message Form */}
         <div className="bg-card p-8 rounded-lg shadow-xs max-w-xl mx-auto">

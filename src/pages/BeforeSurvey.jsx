@@ -104,7 +104,7 @@ export const BeforeSurvey = () => {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center bg-black text-white px-4">
+    <div className="relative min-h-screen flex flex-col items-center bg-black text-white px-4 pb-20 pt-20">
       <StarBackground />
 
       <div className="z-10 w-full max-w-3xl text-center mb-8">
