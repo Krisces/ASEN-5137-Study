@@ -39,7 +39,7 @@ export default async function handler(req, res) {
     await transporter.sendMail(mailOptions);
     return res.status(200).json({ message: "Message sent!" });
   } catch (err) {
-    console.error(err);
+    console.error("Nodemailer error:", err); // ← logs full error
     return res.status(500).json({ message: "Failed to send message" });
   }
 }
