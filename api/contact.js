@@ -21,7 +21,8 @@ export default async function handler(req, res) {
   });
 
   const mailOptions = {
-    from: email, // shows the submitter’s email
+    from: process.env.SMTP_USER, // shows the submitter’s email
+    replyTo: email, 
     to: [
       "kristin.boeckmann@colorado.edu"
     ],
