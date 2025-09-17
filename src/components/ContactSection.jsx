@@ -1,4 +1,4 @@
-import { Mail, Phone, MapPin, Send } from "lucide-react";
+import { Mail, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
@@ -7,25 +7,62 @@ export const ContactSection = () => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const team = [
+    { name: "Kristin Boeckmann", email: "kristin.boeckmann@colorado.edu" },
+    { name: "Alexander Cunningham", email: "alexander.cunningham@colorado.edu" },
+    { name: "Zackary Bacon", email: "zackary.bacon@colorado.edu" },
+    { name: "Jonathan Hale", email: "jonathan.hale@colorado.edu" },
+  ];
 
-    setIsSubmitting(true);
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsSubmitting(true);
 
-    setTimeout(() => {
-      toast({
-        title: "Message sent!",
-        description: "Thank you for your message. We'll get back to you soon.",
-      });
-      setIsSubmitting(false);
-    }, 1500);
+  const formData = {
+    name: e.target.name.value,
+    email: e.target.email.value,
+    message: e.target.message.value,
+  };
+
+  try {
+    const res = await fetch("/api/contact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.message || "Failed to send message");
+
+    toast({
+      title: "Message sent!",
+      description: "Thank you for your message. We'll get back to you soon.",
+    });
+
+    e.target.reset();
+  } catch (err) {
+    toast({
+      title: "Error",
+      description: err.message,
+    });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
+
+  const copyEmail = async (email) => {
+    try {
+      await navigator.clipboard.writeText(email);
+      toast({ title: "Copied", description: `${email} copied to clipboard` });
+    } catch {
+      toast({ title: "Could not copy", description: "Try copying manually" });
+    }
   };
 
   return (
-    <section
-      id="contact"
-      className="py-16 px-4 relative bg-secondary/30 pb-20" // 👈 added bottom padding
-    >
+    <section id="contact" className="py-16 px-4 relative bg-secondary/30 pb-20">
       <div className="container mx-auto max-w-5xl">
         <h2 className="text-3xl md:text-4xl font-bold mb-2 text-center">
           Get In <span className="text-primary">Touch</span>
@@ -39,36 +76,38 @@ export const ContactSection = () => {
         <div className="space-y-6 flex flex-col items-center mb-12">
           <h3 className="text-2xl font-semibold">Contact Information</h3>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-8">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 rounded-full bg-primary/10">
-                <Mail className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h4 className="font-medium">Email</h4>
-                <a
-                  href="mailto:hello@gmail.com"
-                  className="text-muted-foreground hover:text-primary transition-colors"
-                >
-                  hello@gmail.com
-                </a>
-              </div>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-3xl">
+            {team.map((person) => (
+              <div
+                key={person.email}
+                className="relative flex items-start gap-4 p-3 rounded-lg bg-card border border-input"
+              >
+                <div className="flex-shrink-0 p-3 rounded-full bg-primary/10">
+                  <Mail className="h-6 w-6 text-primary" />
+                </div>
 
-            <div className="flex items-center space-x-4">
-              <div className="p-3 rounded-full bg-primary/10">
-                <Phone className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h4 className="font-medium">Phone</h4>
-                <a
-                  href="tel:+11234567890"
-                  className="text-muted-foreground hover:text-primary transition-colors"
+                {/* text column gets right padding to make room for absolute button */}
+                <div className="flex-1 min-w-0 pr-10">
+                  <h4 className="font-medium">{person.name}</h4>
+                  <a
+                    href={`mailto:${person.email}`}
+                    className="block text-sm text-muted-foreground hover:text-primary mt-1 truncate"
+                  >
+                    {person.email}
+                  </a>
+                </div>
+
+                {/* absolute copy button so it doesn't affect text alignment */}
+                <button
+                  type="button"
+                  onClick={() => copyEmail(person.email)}
+                  className="absolute top-3 right-3 inline-flex items-center gap-2 text-sm px-2 py-1 rounded-md border border-transparent hover:bg-muted"
+                  aria-label={`Copy ${person.email}`}
                 >
-                  +1 (123) 456-7890
-                </a>
+                  Copy
+                </button>
               </div>
-            </div>
+            ))}
           </div>
         </div>
 
@@ -86,7 +125,7 @@ export const ContactSection = () => {
                 id="name"
                 name="name"
                 required
-                className="w-full px-4 py-3 rounded-md border border-input bg-background focus:outline-hidden focus:ring-2 focus:ring-primary"
+                className="w-full px-4 py-3 rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="Your Name"
               />
             </div>
@@ -100,7 +139,7 @@ export const ContactSection = () => {
                 id="email"
                 name="email"
                 required
-                className="w-full px-4 py-3 rounded-md border border-input bg-background focus:outline-hidden focus:ring-2 focus:ring-primary"
+                className="w-full px-4 py-3 rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="you@example.com"
               />
             </div>
@@ -113,7 +152,7 @@ export const ContactSection = () => {
                 id="message"
                 name="message"
                 required
-                className="w-full px-4 py-3 rounded-md border border-input bg-background focus:outline-hidden focus:ring-2 focus:ring-primary resize-none"
+                className="w-full px-4 py-3 rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                 placeholder="Write your message here..."
               />
             </div>
@@ -121,9 +160,7 @@ export const ContactSection = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className={cn(
-                "cosmic-button w-full flex items-center justify-center gap-2"
-              )}
+              className={cn("cosmic-button w-full flex items-center justify-center gap-2")}
             >
               {isSubmitting ? "Sending..." : "Send Message"}
               <Send size={16} />
