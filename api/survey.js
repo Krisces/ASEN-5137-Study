@@ -1,17 +1,16 @@
-import express from "express";
-import { db } from "../dbConfig.js";
-import { SurveySubmissions } from "../schema.js";
+import { db } from "../backend/dbConfig.js";
+import { SurveySubmissions } from "../backend/schema.js";
 
-const router = express.Router();
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ message: "Method Not Allowed" });
+  }
 
-router.post("/submit", async (req, res) => {
   try {
     const { studentEmail, age, gender, favoriteMusic, dailyMusicHours, isException } = req.body;
 
-    // Simple validation
     if (!studentEmail) return res.status(400).json({ message: "Email required" });
 
-    // Save to database
     const result = await db.insert(SurveySubmissions).values({
       studentEmail: studentEmail.toLowerCase(),
       age: age || null,
@@ -21,11 +20,9 @@ router.post("/submit", async (req, res) => {
       isException: isException ? 1 : 0
     });
 
-    return res.json({ success: true, id: result });
+    return res.status(200).json({ success: true, id: result });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ success: false, message: "Server error" });
   }
-});
-
-export default router;
+}
