@@ -1,4 +1,6 @@
-import nodemailer from "nodemailer";
+import sgMail from "@sendgrid/mail";
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -11,21 +13,10 @@ export default async function handler(req, res) {
     return res.status(400).json({ message: "All fields are required" });
   }
 
-  // transporter authenticates with Gmail using an App Password
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.SMTP_USER, // Gmail account used to send emails
-      pass: process.env.SMTP_PASS, // App Password
-    },
-  });
-
-  const mailOptions = {
-    from: process.env.SMTP_USER, // shows the submitter’s email
-    replyTo: email, 
-    to: [
-      "krbo9035@colorado.edu"
-    ],
+  const msg = {
+    to: process.env.SENDGRID_RECIPIENTS.split(","), // array of recipients
+    from: process.env.SENDGRID_SENDER,             // must be a verified sender
+    replyTo: email,                                // submitter's email
     subject: `New contact form message from ${name}`,
     text: message,
     html: `
@@ -36,11 +27,11 @@ export default async function handler(req, res) {
     `,
   };
 
-    try {
-        await transporter.sendMail(mailOptions);
-        return res.status(200).json({ message: "Message sent!" });
-    } catch (err) {
-        console.error("Nodemailer error:", err); // <-- important: logs full error
-        return res.status(500).json({ message: `Failed to send message: ${err.message}` });
-    }
+  try {
+    await sgMail.send(msg);
+    return res.status(200).json({ message: "Message sent!" });
+  } catch (error) {
+    console.error("SendGrid error:", error.response ? error.response.body : error);
+    return res.status(500).json({ message: "Failed to send message." });
+  }
 }
