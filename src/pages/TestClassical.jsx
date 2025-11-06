@@ -10,53 +10,67 @@ export const TestClassical = ({ studentEmail }) => {
   const [mathAnswers, setMathAnswers] = useState([]);
   const startTimeRef = useRef(null);
   const timerRef = useRef(null);
-  const audioRef = useRef(new Audio("/audio/classical.mp3"));
-  const MAX_TIME_MS = 2 * 60 * 1000; // 2 minutes
+  const mathTimerRef = useRef(null);
+  const MAX_TIME_MS = 3 * 60 * 1000; // 3 minutes overall
+  const MATH_TIME_MS = 1 * 60 * 1000; // 1 minute for math section
+
+  // Fixed Set 2 ("Classical") – 43 problems
+  const mathProblems = [
+    { id: 1, a: 1, b: 2 }, { id: 2, a: 1, b: 11 }, { id: 3, a: 2, b: 4 }, { id: 4, a: 2, b: 13 },
+    { id: 5, a: 3, b: 5 }, { id: 6, a: 3, b: 11 }, { id: 7, a: 4, b: 7 }, { id: 8, a: 4, b: 12 },
+    { id: 9, a: 5, b: 3 }, { id: 10, a: 5, b: 8 }, { id: 11, a: 6, b: 1 }, { id: 12, a: 6, b: 10 },
+    { id: 13, a: 7, b: 2 }, { id: 14, a: 7, b: 11 }, { id: 15, a: 8, b: 5 }, { id: 16, a: 8, b: 13 },
+    { id: 17, a: 9, b: 2 }, { id: 18, a: 9, b: 10 }, { id: 19, a: 10, b: 5 }, { id: 20, a: 10, b: 12 },
+    { id: 21, a: 11, b: 1 }, { id: 22, a: 11, b: 10 }, { id: 23, a: 12, b: 2 }, { id: 24, a: 12, b: 11 },
+    { id: 25, a: 13, b: 4 }, { id: 26, a: 13, b: 9 }, { id: 27, a: 2, b: 6 }, { id: 28, a: 3, b: 9 },
+    { id: 29, a: 4, b: 2 }, { id: 30, a: 5, b: 13 }, { id: 31, a: 6, b: 5 }, { id: 32, a: 7, b: 9 },
+    { id: 33, a: 8, b: 7 }, { id: 34, a: 9, b: 8 }, { id: 35, a: 10, b: 2 }, { id: 36, a: 11, b: 5 },
+    { id: 37, a: 12, b: 6 }, { id: 38, a: 13, b: 11 }, { id: 39, a: 3, b: 12 }, { id: 40, a: 7, b: 5 },
+    { id: 41, a: 9, b: 6 }, { id: 42, a: 12, b: 13 }, { id: 43, a: 13, b: 7 }
+  ];
 
   const paragraph = `Classical music has a long history and has influenced many forms of art and culture. Composers like Mozart and Beethoven created works that are still widely performed today. The structure of classical compositions often includes symphonies, concertos, and sonatas, and the music is known for its emotional depth and technical precision. Listening to classical music has been associated with relaxation, focus, and enhanced cognitive performance.`;
 
   const readingQuestions = [
-    {
-      id: 1,
-      question: "Which composers are mentioned as examples of classical music?",
-      options: ["Mozart and Beethoven", "Bach and Chopin", "Elvis and Sinatra", "John Williams and Hans Zimmer"],
-    },
-    {
-      id: 2,
-      question: "What is classical music known for?",
-      options: ["Emotional depth and technical precision", "Loud beats and bass", "Improvised solos", "Random sound effects"],
-    },
-  ];
-
-  const mathProblems = [
-    { id: 1, a: 3, b: 7 },
-    { id: 2, a: 4, b: 6 },
-    { id: 3, a: 5, b: 8 },
-    { id: 4, a: 7, b: 3 },
-    { id: 5, a: 6, b: 9 },
+    { id: 1, question: "Which composers are mentioned as examples of classical music?", options: ["Mozart and Beethoven", "Bach and Chopin", "Elvis and Sinatra", "John Williams and Hans Zimmer"] },
+    { id: 2, question: "What is classical music known for?", options: ["Emotional depth and technical precision", "Loud beats and bass", "Improvised solos", "Random sound effects"] },
+    { id: 3, question: "What types of compositions are commonly found in classical music?", options: ["Symphonies, concertos, sonatas", "Rock albums", "Jazz improvisations", "Electronic tracks"] },
+    { id: 4, question: "What benefit is associated with listening to classical music?", options: ["Relaxation and focus", "Weight loss", "Faster running", "Improved vision"] },
+    { id: 5, question: "Are classical works still performed today?", options: ["Yes", "No", "Rarely", "Only in schools"] },
   ];
 
   useEffect(() => {
     startTimeRef.current = Date.now();
 
-    const audio = audioRef.current;
-    audio.loop = true;
-    audio.play().catch(() => console.log("Autoplay blocked, user interaction required"));
-
     timerRef.current = setInterval(() => {
       const elapsed = Date.now() - startTimeRef.current;
       if (elapsed >= MAX_TIME_MS) {
         clearInterval(timerRef.current);
+        clearInterval(mathTimerRef.current);
         setStage("closing");
       }
     }, 500);
 
     return () => {
       clearInterval(timerRef.current);
-      audio.pause();
-      audio.currentTime = 0;
+      clearInterval(mathTimerRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (stage === "math") {
+      const mathStartTime = Date.now();
+      mathTimerRef.current = setInterval(() => {
+        const elapsed = Date.now() - mathStartTime;
+        if (elapsed >= MATH_TIME_MS) {
+          clearInterval(mathTimerRef.current);
+          setStage("closing");
+        }
+      }, 500);
+    } else {
+      clearInterval(mathTimerRef.current);
+    }
+  }, [stage]);
 
   const handleQuestionChange = (id, value) =>
     setReadingAnswers({ ...readingAnswers, [id]: value });
@@ -76,10 +90,7 @@ export const TestClassical = ({ studentEmail }) => {
 
   const handleFinishTest = async () => {
     clearInterval(timerRef.current);
-    const audio = audioRef.current;
-    audio.pause();
-    audio.currentTime = 0;
-
+    clearInterval(mathTimerRef.current);
     const totalTimeMs = Math.min(Date.now() - startTimeRef.current, MAX_TIME_MS);
 
     const readingResults = readingQuestions.map(q => ({
@@ -102,14 +113,12 @@ export const TestClassical = ({ studentEmail }) => {
 
     const allResults = [...readingResults, ...mathResults];
 
-    // Save results
     await fetch("/api/saveTestResults", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(allResults)
     });
 
-    // Unlock next test (Rock)
     const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
     if (completed < 2) {
       localStorage.setItem("completedTests", "2");
@@ -123,6 +132,7 @@ export const TestClassical = ({ studentEmail }) => {
       <StarBackground />
       <div className="relative z-10 w-full max-w-3xl space-y-8">
 
+        {/* Reading Stage */}
         {stage === "reading" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4">
             <h1 className="text-3xl font-bold text-center">Reading Comprehension</h1>
@@ -139,6 +149,7 @@ export const TestClassical = ({ studentEmail }) => {
           </div>
         )}
 
+        {/* Questions Stage */}
         {stage === "questions" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-6 text-center">
             <h1 className="text-3xl font-bold mb-4">Reading Questions</h1>
@@ -172,12 +183,14 @@ export const TestClassical = ({ studentEmail }) => {
           </div>
         )}
 
+        {/* Math Stage */}
         {stage === "math" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
             <h1 className="text-3xl font-bold mb-2">Math Problems</h1>
-            <p>Solve the multiplication problems below. Press Enter after each answer.</p>
+            <p>Answer as many as you can. Press Enter after each answer.</p>
             <p className="mt-2">
-              Problem {currentMathIndex + 1} of {mathProblems.length}: {mathProblems[currentMathIndex].a} × {mathProblems[currentMathIndex].b} =
+              Problem {currentMathIndex + 1} of {mathProblems.length}:{" "}
+              {mathProblems[currentMathIndex].a} × {mathProblems[currentMathIndex].b} =
             </p>
             <input
               type="number"
@@ -188,6 +201,7 @@ export const TestClassical = ({ studentEmail }) => {
           </div>
         )}
 
+        {/* Closing Stage */}
         {stage === "closing" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
             <h1 className="text-3xl font-bold">Test Complete</h1>
