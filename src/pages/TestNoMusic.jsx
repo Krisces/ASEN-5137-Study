@@ -16,17 +16,17 @@ export const TestNoMusic = ({ studentEmail }) => {
 
   // Fixed Set 1 ("NoMusic") – 43 problems
   const mathProblems = [
-    { id:1, a:1, b:1 }, { id:2, a:1, b:10 }, { id:3, a:2, b:3 }, { id:4, a:2, b:12 },
-    { id:5, a:3, b:4 }, { id:6, a:3, b:13 }, { id:7, a:4, b:6 }, { id:8, a:4, b:11 },
-    { id:9, a:5, b:2 }, { id:10, a:5, b:9 }, { id:11, a:6, b:8 }, { id:12, a:6, b:13 },
-    { id:13, a:7, b:3 }, { id:14, a:7, b:10 }, { id:15, a:8, b:1 }, { id:16, a:8, b:12 },
-    { id:17, a:9, b:5 }, { id:18, a:9, b:11 }, { id:19, a:10, b:7 }, { id:20, a:10, b:13 },
-    { id:21, a:11, b:2 }, { id:22, a:11, b:9 }, { id:23, a:12, b:4 }, { id:24, a:12, b:8 },
-    { id:25, a:13, b:6 }, { id:26, a:13, b:10 }, { id:27, a:2, b:9 }, { id:28, a:3, b:7 },
-    { id:29, a:4, b:5 }, { id:30, a:5, b:11 }, { id:31, a:6, b:9 }, { id:32, a:7, b:13 },
-    { id:33, a:8, b:10 }, { id:34, a:9, b:12 }, { id:35, a:10, b:8 }, { id:36, a:11, b:7 },
-    { id:37, a:12, b:9 }, { id:38, a:13, b:12 }, { id:39, a:3, b:8 }, { id:40, a:7, b:6 },
-    { id:41, a:9, b:13 }, { id:42, a:12, b:10 }, { id:43, a:13, b:13 }
+    { id: 1, a: 1, b: 1 }, { id: 2, a: 1, b: 10 }, { id: 3, a: 2, b: 3 }, { id: 4, a: 2, b: 12 },
+    { id: 5, a: 3, b: 4 }, { id: 6, a: 3, b: 13 }, { id: 7, a: 4, b: 6 }, { id: 8, a: 4, b: 11 },
+    { id: 9, a: 5, b: 2 }, { id: 10, a: 5, b: 9 }, { id: 11, a: 6, b: 8 }, { id: 12, a: 6, b: 13 },
+    { id: 13, a: 7, b: 3 }, { id: 14, a: 7, b: 10 }, { id: 15, a: 8, b: 1 }, { id: 16, a: 8, b: 12 },
+    { id: 17, a: 9, b: 5 }, { id: 18, a: 9, b: 11 }, { id: 19, a: 10, b: 7 }, { id: 20, a: 10, b: 13 },
+    { id: 21, a: 11, b: 2 }, { id: 22, a: 11, b: 9 }, { id: 23, a: 12, b: 4 }, { id: 24, a: 12, b: 8 },
+    { id: 25, a: 13, b: 6 }, { id: 26, a: 13, b: 10 }, { id: 27, a: 2, b: 9 }, { id: 28, a: 3, b: 7 },
+    { id: 29, a: 4, b: 5 }, { id: 30, a: 5, b: 11 }, { id: 31, a: 6, b: 9 }, { id: 32, a: 7, b: 13 },
+    { id: 33, a: 8, b: 10 }, { id: 34, a: 9, b: 12 }, { id: 35, a: 10, b: 8 }, { id: 36, a: 11, b: 7 },
+    { id: 37, a: 12, b: 9 }, { id: 38, a: 13, b: 12 }, { id: 39, a: 3, b: 8 }, { id: 40, a: 7, b: 6 },
+    { id: 41, a: 9, b: 13 }, { id: 42, a: 12, b: 10 }, { id: 43, a: 13, b: 13 }
   ];
 
   useEffect(() => {
@@ -153,9 +153,9 @@ export const TestNoMusic = ({ studentEmail }) => {
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-6 text-center">
             <h1 className="text-3xl font-bold mb-4">Reading Questions</h1>
             {readingQuestions.map((q) => (
-              <div key={q.id} className="space-y-2 text-center">
-                <p>{q.question}</p>
-                <div className="space-y-1 text-left inline-block">
+              <div key={q.id} className="space-y-2">
+                <p className="text-center">{q.question}</p>
+                <div className="space-y-1 text-left mx-auto max-w-md">
                   {q.options.map((opt) => (
                     <label key={opt} className="flex items-center space-x-2">
                       <input
@@ -181,6 +181,8 @@ export const TestNoMusic = ({ studentEmail }) => {
             </div>
           </div>
         )}
+
+
 
         {/* Math Stage */}
         {stage === "math" && (
