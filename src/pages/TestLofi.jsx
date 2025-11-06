@@ -11,7 +11,7 @@ export const TestLofi = ({ studentEmail }) => {
   const startTimeRef = useRef(null);
   const timerRef = useRef(null);
   const audioRef = useRef(new Audio("/audio/lofi.mp3"));
-  const MAX_TIME_MS = 2 * 60 * 1000; // 2 minutes
+  const MAX_TIME_MS = 3 * 60 * 1000; // 3 minutes
 
   const paragraph = `Lofi beats are characterized by soft, relaxing rhythms often used for studying or relaxation. They feature mellow melodies, light percussion, and a generally calm atmosphere. Many people use lofi music as a background while reading, writing, or focusing on tasks. Listening to lofi can help reduce stress and improve concentration.`;
 
@@ -26,17 +26,37 @@ export const TestLofi = ({ studentEmail }) => {
       question: "What are characteristics of lofi beats?",
       options: ["Mellow melodies and calm atmosphere", "Heavy metal guitar riffs", "Fast-paced electronic rhythms", "Orchestral arrangements"],
     },
+    {
+      id: 3,
+      question: "Lofi music helps improve what?",
+      options: ["Concentration", "Physical strength", "Running speed", "Mathematics skills"],
+    },
+    {
+      id: 4,
+      question: "What instruments are common in lofi?",
+      options: ["Light percussion and mellow melodies", "Electric guitar and drums", "Synthesizers only", "Brass and woodwinds"],
+    },
+    {
+      id: 5,
+      question: "Lofi music creates what kind of atmosphere?",
+      options: ["Calm and relaxing", "Chaotic and loud", "Intense and fast", "Sad and gloomy"],
+    },
   ];
 
   const mathProblems = [
-    { id: 1, a: 5, b: 6 },
-    { id: 2, a: 7, b: 4 },
-    { id: 3, a: 8, b: 3 },
-    { id: 4, a: 6, b: 7 },
-    { id: 5, a: 9, b: 2 },
+    { id: 1, a: 1, b: 4 }, { id: 2, a: 1, b: 13 }, { id: 3, a: 2, b: 2 }, { id: 4, a: 2, b: 10 },
+    { id: 5, a: 3, b: 1 }, { id: 6, a: 3, b: 3 }, { id: 7, a: 4, b: 1 }, { id: 8, a: 4, b: 9 },
+    { id: 9, a: 5, b: 4 }, { id: 10, a: 5, b: 7 }, { id: 11, a: 6, b: 4 }, { id: 12, a: 6, b: 12 },
+    { id: 13, a: 7, b: 7 }, { id: 14, a: 7, b: 13 }, { id: 15, a: 8, b: 2 }, { id: 16, a: 8, b: 11 },
+    { id: 17, a: 9, b: 1 }, { id: 18, a: 9, b: 10 }, { id: 19, a: 10, b: 3 }, { id: 20, a: 10, b: 9 },
+    { id: 21, a: 11, b: 4 }, { id: 22, a: 11, b: 13 }, { id: 23, a: 12, b: 1 }, { id: 24, a: 12, b: 9 },
+    { id: 25, a: 13, b: 3 }, { id: 26, a: 13, b: 13 }, { id: 27, a: 2, b: 7 }, { id: 28, a: 3, b: 11 },
+    { id: 29, a: 4, b: 4 }, { id: 30, a: 5, b: 6 }, { id: 31, a: 6, b: 6 }, { id: 32, a: 7, b: 11 },
+    { id: 33, a: 8, b: 8 }, { id: 34, a: 9, b: 11 }, { id: 35, a: 10, b: 6 }, { id: 36, a: 11, b: 6 },
+    { id: 37, a: 12, b: 10 }, { id: 38, a: 13, b: 9 }, { id: 39, a: 3, b: 10 }, { id: 40, a: 7, b: 9 },
+    { id: 41, a: 9, b: 8 }, { id: 42, a: 12, b: 13 }, { id: 43, a: 13, b: 4 },
   ];
 
-  // Start timer and audio
   useEffect(() => {
     startTimeRef.current = Date.now();
 
@@ -109,7 +129,7 @@ export const TestLofi = ({ studentEmail }) => {
       body: JSON.stringify(allResults)
     });
 
-    navigate("/studyhome"); // back to main
+    navigate("/studyhome");
   };
 
   return (
@@ -117,7 +137,6 @@ export const TestLofi = ({ studentEmail }) => {
       <StarBackground />
       <div className="relative z-10 w-full max-w-3xl space-y-8">
 
-        {/* Reading Stage */}
         {stage === "reading" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4">
             <h1 className="text-3xl font-bold text-center">Reading Comprehension</h1>
@@ -131,7 +150,6 @@ export const TestLofi = ({ studentEmail }) => {
           </div>
         )}
 
-        {/* Questions Stage */}
         {stage === "questions" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-6 text-center">
             <h1 className="text-3xl font-bold mb-4">Reading Questions</h1>
@@ -162,7 +180,6 @@ export const TestLofi = ({ studentEmail }) => {
           </div>
         )}
 
-        {/* Math Stage */}
         {stage === "math" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
             <h1 className="text-3xl font-bold mb-2">Math Problems</h1>
@@ -179,7 +196,6 @@ export const TestLofi = ({ studentEmail }) => {
           </div>
         )}
 
-        {/* Closing Stage */}
         {stage === "closing" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
             <h1 className="text-3xl font-bold">Test Complete</h1>

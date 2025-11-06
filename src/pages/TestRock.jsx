@@ -11,7 +11,7 @@ export const TestRock = ({ studentEmail }) => {
   const startTimeRef = useRef(null);
   const timerRef = useRef(null);
   const mathTimerRef = useRef(null);
-  const audioRef = useRef(new Audio("/audio/rock.mp3"));
+  const audioRef = useRef(new Audio("/audio/highwaytohell.mp3"));
 
   const MAX_TIME_MS = 3 * 60 * 1000; // 3 minutes overall
   const MATH_TIME_MS = 1 * 60 * 1000; // 1 minute for math section
