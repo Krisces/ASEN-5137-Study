@@ -10,8 +10,11 @@ export const TestRock = ({ studentEmail }) => {
   const [mathAnswers, setMathAnswers] = useState([]);
   const startTimeRef = useRef(null);
   const timerRef = useRef(null);
+  const mathTimerRef = useRef(null);
   const audioRef = useRef(new Audio("/audio/rock.mp3"));
-  const MAX_TIME_MS = 2 * 60 * 1000; // 2 minutes
+
+  const MAX_TIME_MS = 3 * 60 * 1000; // 3 minutes overall
+  const MATH_TIME_MS = 1 * 60 * 1000; // 1 minute for math section
 
   const paragraph = `Rock music from the 70s and 80s has shaped popular culture and influenced generations of musicians. Bands like Queen, Led Zeppelin, and The Rolling Stones created iconic songs that remain popular today. Rock music often features strong guitar riffs, memorable melodies, and energetic rhythms. Listening to rock music can energize listeners and evoke feelings of excitement and nostalgia.`;
 
@@ -26,14 +29,35 @@ export const TestRock = ({ studentEmail }) => {
       question: "What are characteristics of 70s/80s rock music?",
       options: ["Strong guitar riffs and energetic rhythms", "Slow melodies and soft vocals", "Electronic beats and synths", "Jazz improvisation and swing"],
     },
+    {
+      id: 3,
+      question: "Listening to rock music can evoke what?",
+      options: ["Excitement and nostalgia", "Hunger", "Sleepiness", "Anxiety"],
+    },
+    {
+      id: 4,
+      question: "Are songs from these bands still popular today?",
+      options: ["Yes", "No", "Only in movies", "Only on radio"],
+    },
+    {
+      id: 5,
+      question: "Which era of rock music is discussed?",
+      options: ["70s and 80s", "60s", "90s", "2000s"],
+    },
   ];
 
   const mathProblems = [
-    { id: 1, a: 4, b: 7 },
-    { id: 2, a: 6, b: 5 },
-    { id: 3, a: 3, b: 9 },
-    { id: 4, a: 8, b: 6 },
-    { id: 5, a: 7, b: 4 },
+    { id: 1, a: 1, b: 3 }, { id: 2, a: 1, b: 12 }, { id: 3, a: 2, b: 5 }, { id: 4, a: 2, b: 11 },
+    { id: 5, a: 3, b: 2 }, { id: 6, a: 3, b: 10 }, { id: 7, a: 4, b: 8 }, { id: 8, a: 4, b: 13 },
+    { id: 9, a: 5, b: 1 }, { id: 10, a: 5, b: 10 }, { id: 11, a: 6, b: 2 }, { id: 12, a: 6, b: 11 },
+    { id: 13, a: 7, b: 1 }, { id: 14, a: 7, b: 12 }, { id: 15, a: 8, b: 3 }, { id: 16, a: 8, b: 9 },
+    { id: 17, a: 9, b: 3 }, { id: 18, a: 9, b: 7 }, { id: 19, a: 10, b: 1 }, { id: 20, a: 10, b: 11 },
+    { id: 21, a: 11, b: 3 }, { id: 22, a: 11, b: 12 }, { id: 23, a: 12, b: 3 }, { id: 24, a: 12, b: 7 },
+    { id: 25, a: 13, b: 1 }, { id: 26, a: 13, b: 8 }, { id: 27, a: 2, b: 8 }, { id: 28, a: 3, b: 6 },
+    { id: 29, a: 4, b: 3 }, { id: 30, a: 5, b: 12 }, { id: 31, a: 6, b: 3 }, { id: 32, a: 7, b: 8 },
+    { id: 33, a: 8, b: 6 }, { id: 34, a: 9, b: 9 }, { id: 35, a: 10, b: 4 }, { id: 36, a: 11, b: 8 },
+    { id: 37, a: 12, b: 5 }, { id: 38, a: 13, b: 5 }, { id: 39, a: 3, b: 13 }, { id: 40, a: 7, b: 4 },
+    { id: 41, a: 9, b: 4 }, { id: 42, a: 12, b: 12 }, { id: 43, a: 13, b: 2 },
   ];
 
   useEffect(() => {
@@ -47,16 +71,33 @@ export const TestRock = ({ studentEmail }) => {
       const elapsed = Date.now() - startTimeRef.current;
       if (elapsed >= MAX_TIME_MS) {
         clearInterval(timerRef.current);
+        clearInterval(mathTimerRef.current);
         setStage("closing");
       }
     }, 500);
 
     return () => {
       clearInterval(timerRef.current);
+      clearInterval(mathTimerRef.current);
       audio.pause();
       audio.currentTime = 0;
     };
   }, []);
+
+  useEffect(() => {
+    if (stage === "math") {
+      const mathStartTime = Date.now();
+      mathTimerRef.current = setInterval(() => {
+        const elapsed = Date.now() - mathStartTime;
+        if (elapsed >= MATH_TIME_MS) {
+          clearInterval(mathTimerRef.current);
+          setStage("closing");
+        }
+      }, 500);
+    } else {
+      clearInterval(mathTimerRef.current);
+    }
+  }, [stage]);
 
   const handleQuestionChange = (id, value) =>
     setReadingAnswers({ ...readingAnswers, [id]: value });
@@ -76,6 +117,7 @@ export const TestRock = ({ studentEmail }) => {
 
   const handleFinishTest = async () => {
     clearInterval(timerRef.current);
+    clearInterval(mathTimerRef.current);
     const audio = audioRef.current;
     audio.pause();
     audio.currentTime = 0;
@@ -102,18 +144,14 @@ export const TestRock = ({ studentEmail }) => {
 
     const allResults = [...readingResults, ...mathResults];
 
-    // Save results
     await fetch("/api/saveTestResults", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(allResults)
     });
 
-    // Unlock next test (Lofi)
     const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
-    if (completed < 3) {
-      localStorage.setItem("completedTests", "3");
-    }
+    if (completed < 3) localStorage.setItem("completedTests", "3");
 
     navigate("/testlofi");
   };
