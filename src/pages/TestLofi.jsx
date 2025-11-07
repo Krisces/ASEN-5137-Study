@@ -97,14 +97,18 @@ export const TestLofi = ({ studentEmail }) => {
 
   const handleFinishTest = async () => {
     clearInterval(timerRef.current);
-    const audio = audioRef.current;
-    audio.pause();
-    audio.currentTime = 0;
+    clearInterval(mathTimerRef.current);
+
+    const email = studentEmail || localStorage.getItem("studentEmail");
+    if (!email) {
+      alert("Student email not found. Please start from the survey page.");
+      return;
+    }
 
     const totalTimeMs = Math.min(Date.now() - startTimeRef.current, MAX_TIME_MS);
 
     const readingResults = readingQuestions.map(q => ({
-      studentEmail,
+      studentEmail: email.toLowerCase(),
       testName: "Lofi",
       questionType: "reading",
       questionId: q.id,
@@ -113,7 +117,7 @@ export const TestLofi = ({ studentEmail }) => {
     }));
 
     const mathResults = mathAnswers.map(a => ({
-      studentEmail,
+      studentEmail: email.toLowerCase(),
       testName: "Lofi",
       questionType: "math",
       questionId: a.id,
@@ -123,18 +127,43 @@ export const TestLofi = ({ studentEmail }) => {
 
     const allResults = [...readingResults, ...mathResults];
 
-    await fetch("/api/saveTestResults", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        studentEmail,
-        testName: "Lofi",
-        results: allResults,
-      }),
+    console.log("Sending test results:", {
+      studentEmail: email,
+      testName: "Lofi",
+      results: allResults
     });
 
+    try {
+      const res = await fetch("/api/saveTestResults", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentEmail: email,
+          testName: "Lofi",
+          results: allResults.length ? allResults : [],
+        }),
+      });
 
-    navigate("/studyhome");
+      const data = await res.json();
+      if (!data.success) {
+        console.error("Error saving test results:", data);
+        alert("Failed to save test results. Try again.");
+        return;
+      }
+
+      // Update completed tests counter
+      const currentTestId = 4; // No Music test
+      const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
+      if (completed < currentTestId) {
+        localStorage.setItem("completedTests", currentTestId.toString());
+      }
+
+      // Navigate to next test
+      navigate("/studyhome");
+    } catch (err) {
+      console.error("Server error saving test results:", err);
+      alert("Server error. Try again later.");
+    }
   };
 
   return (

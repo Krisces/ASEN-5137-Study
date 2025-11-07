@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 export const StudyHome = () => {
     const navigate = useNavigate();
-    const [unlockedTests, setUnlockedTests] = useState(1); // Number of unlocked tests
+    const [unlockedTests, setUnlockedTests] = useState(1); // Start with the first test unlocked
 
     const tests = [
         { id: 1, title: "No Music Test", context: "Complete the test without any background music." },
@@ -13,11 +13,12 @@ export const StudyHome = () => {
         { id: 4, title: "Lofi Beats Test", context: "Relax with lofi beats while completing this test." },
     ];
 
-    // Optional: load progress from localStorage or cookies
+    // Load progress from localStorage
     useEffect(() => {
-        const completed = parseInt(localStorage.getItem("completedTests") || "0");
-        if (completed > unlockedTests) setUnlockedTests(completed + 1);
+        const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
+        setUnlockedTests(Math.min(completed + 1, tests.length));
     }, []);
+
 
     const handleStartTest = (testId) => {
         if (testId <= unlockedTests) {
@@ -30,7 +31,6 @@ export const StudyHome = () => {
             navigate(routeMap[testId]);
         }
     };
-
 
     return (
         <div className="relative min-h-screen bg-black text-white px-4 py-12 flex flex-col items-center">

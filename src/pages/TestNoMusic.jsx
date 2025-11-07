@@ -144,11 +144,14 @@ export const TestNoMusic = ({ studentEmail }) => {
       }
 
       // Update completed tests counter
+      const currentTestId = 1; // No Music test
       const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
-      if (completed < 1) localStorage.setItem("completedTests", "1");
+      if (completed < currentTestId) {
+        localStorage.setItem("completedTests", currentTestId.toString());
+      }
 
       // Navigate to next test
-      navigate("/testclassical");
+      navigate("/studyhome");
     } catch (err) {
       console.error("Server error saving test results:", err);
       alert("Server error. Try again later.");

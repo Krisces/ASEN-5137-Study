@@ -21,6 +21,9 @@ const EXCEPTION_EMAILS = [
   "alexander.cunningham@colorado.edu",
   "zackary.bacon@colorado.edu",
   "jonathan.hale@colorado.edu",
+  "alcu9870@colorado.edu",
+  "zaba6688@colorado.edu",
+  "joha2087@colorado.edu",
 ].map(email => email.toLowerCase());
 
 export const BeforeSurvey = () => {
