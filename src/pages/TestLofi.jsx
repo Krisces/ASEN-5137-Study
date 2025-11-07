@@ -126,8 +126,13 @@ export const TestLofi = ({ studentEmail }) => {
     await fetch("/api/saveTestResults", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(allResults)
+      body: JSON.stringify({
+        studentEmail,
+        testName: "Lofi",
+        results: allResults,
+      }),
     });
+
 
     navigate("/studyhome");
   };

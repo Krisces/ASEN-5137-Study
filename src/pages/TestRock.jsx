@@ -147,8 +147,13 @@ export const TestRock = ({ studentEmail }) => {
     await fetch("/api/saveTestResults", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(allResults)
+      body: JSON.stringify({
+        studentEmail,
+        testName: "Rock",
+        results: allResults,
+      }),
     });
+
 
     const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
     if (completed < 3) localStorage.setItem("completedTests", "3");

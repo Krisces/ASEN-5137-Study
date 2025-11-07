@@ -116,8 +116,13 @@ export const TestClassical = ({ studentEmail }) => {
     await fetch("/api/saveTestResults", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(allResults)
+      body: JSON.stringify({
+        studentEmail,
+        testName: "Classical",
+        results: allResults,
+      }),
     });
+
 
     const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
     if (completed < 2) {
