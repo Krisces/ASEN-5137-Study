@@ -40,9 +40,10 @@ export const TestLofi = ({ studentEmail }) => {
     { id: 41, a: 9, b: 8 }, { id: 42, a: 12, b: 13 }, { id: 43, a: 13, b: 4 },
   ];
 
-  // Start timers and music
+  // ---- Timers & Music ----
   useEffect(() => {
     startTimeRef.current = Date.now();
+
     const audio = audioRef.current;
     audio.loop = true;
     audio.play().catch(() => console.log("Autoplay blocked"));
@@ -72,18 +73,10 @@ export const TestLofi = ({ studentEmail }) => {
     }
   }, [stage]);
 
-  // Auto-save results when test ends
+  // ---- Auto-Save Results ----
   useEffect(() => {
     if (stage === "closing") {
       const saveResults = async () => {
-        clearInterval(timerRef.current);
-        clearInterval(mathTimerRef.current);
-        const audio = audioRef.current;
-        if (audio) {
-          audio.pause();
-          audio.currentTime = 0;
-        }
-
         const email = studentEmail || localStorage.getItem("studentEmail");
         if (!email) return;
 
@@ -95,7 +88,7 @@ export const TestLofi = ({ studentEmail }) => {
           questionType: "reading",
           questionId: q.id,
           isCorrect: readingAnswers[q.id] === q.options[0],
-          totalTimeMs,
+          totalTimeMs
         }));
 
         const mathResults = mathAnswers.map(a => ({
@@ -104,7 +97,7 @@ export const TestLofi = ({ studentEmail }) => {
           questionType: "math",
           questionId: a.id,
           isCorrect: a.answer === a.a * a.b,
-          totalTimeMs,
+          totalTimeMs
         }));
 
         const allResults = [...readingResults, ...mathResults];
@@ -123,6 +116,7 @@ export const TestLofi = ({ studentEmail }) => {
           const data = await res.json();
           if (!data.success) console.error("Error saving test results:", data);
 
+          // Unlock next test
           const currentTestId = 4;
           const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
           if (completed < currentTestId) {
@@ -137,13 +131,14 @@ export const TestLofi = ({ studentEmail }) => {
     }
   }, [stage]);
 
+  // ---- Handlers ----
   const handleQuestionChange = (id, value) =>
     setReadingAnswers({ ...readingAnswers, [id]: value });
 
   const handleMathAnswer = (e) => {
     if (e.key === "Enter") {
       const problem = mathProblems[currentMathIndex];
-      setMathAnswers([...mathAnswers, { ...problem, answer: Number(e.target.value) }]);
+      setMathAnswers((prev) => [...prev, { ...problem, answer: Number(e.target.value) }]);
       e.target.value = "";
       if (currentMathIndex + 1 < mathProblems.length) {
         setCurrentMathIndex(currentMathIndex + 1);
@@ -153,16 +148,17 @@ export const TestLofi = ({ studentEmail }) => {
     }
   };
 
+  // ---- Render ----
   return (
     <div className="relative min-h-screen bg-black text-white px-4 py-12 flex flex-col items-center">
       <StarBackground />
       <div className="relative z-10 w-full max-w-3xl space-y-8">
 
-        {/* Reading */}
+        {/* Reading Stage */}
         {stage === "reading" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4">
             <h1 className="text-3xl font-bold text-center">Reading Comprehension</h1>
-            <p className="text-center">Read the paragraph carefully. Questions will follow.</p>
+            <p className="text-center">Read the paragraph below carefully. You will answer questions afterward.</p>
             <p className="bg-gray-700/60 p-4 rounded text-left mt-2 mb-2">{paragraph}</p>
             <div className="text-center">
               <button
@@ -175,15 +171,15 @@ export const TestLofi = ({ studentEmail }) => {
           </div>
         )}
 
-        {/* Questions */}
+        {/* Questions Stage */}
         {stage === "questions" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-6 text-center">
             <h1 className="text-3xl font-bold mb-4">Reading Questions</h1>
-            {readingQuestions.map(q => (
+            {readingQuestions.map((q) => (
               <div key={q.id} className="space-y-2">
                 <p className="text-center">{q.question}</p>
                 <div className="space-y-1 text-left mx-auto max-w-md">
-                  {q.options.map(opt => (
+                  {q.options.map((opt) => (
                     <label key={opt} className="flex items-center space-x-2">
                       <input
                         type="radio"
@@ -209,13 +205,14 @@ export const TestLofi = ({ studentEmail }) => {
           </div>
         )}
 
-        {/* Math */}
+        {/* Math Stage */}
         {stage === "math" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
             <h1 className="text-3xl font-bold mb-2">Math Problems</h1>
-            <p>Solve as many as you can. Press Enter after each answer.</p>
+            <p>Answer as many as you can. Press Enter after each answer.</p>
             <p className="mt-2">
-              Problem {currentMathIndex + 1} of {mathProblems.length}: {mathProblems[currentMathIndex].a} × {mathProblems[currentMathIndex].b} =
+              Problem {currentMathIndex + 1} of {mathProblems.length}:{" "}
+              {mathProblems[currentMathIndex].a} × {mathProblems[currentMathIndex].b} =
             </p>
             <input
               type="number"
@@ -226,7 +223,7 @@ export const TestLofi = ({ studentEmail }) => {
           </div>
         )}
 
-        {/* Closing */}
+        {/* Closing Stage */}
         {stage === "closing" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
             <h1 className="text-3xl font-bold">Test Complete</h1>
@@ -239,6 +236,7 @@ export const TestLofi = ({ studentEmail }) => {
             </button>
           </div>
         )}
+
       </div>
     </div>
   );
