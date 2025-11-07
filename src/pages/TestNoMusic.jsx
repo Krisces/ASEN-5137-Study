@@ -90,10 +90,17 @@ export const TestNoMusic = ({ studentEmail }) => {
   const handleFinishTest = async () => {
     clearInterval(timerRef.current);
     clearInterval(mathTimerRef.current);
+
+    const email = studentEmail || localStorage.getItem("studentEmail");
+    if (!email) {
+      alert("Student email not found. Please start from the survey page.");
+      return;
+    }
+
     const totalTimeMs = Math.min(Date.now() - startTimeRef.current, MAX_TIME_MS);
 
     const readingResults = readingQuestions.map(q => ({
-      studentEmail,
+      studentEmail: email.toLowerCase(),
       testName: "NoMusic",
       questionType: "reading",
       questionId: q.id,
@@ -102,7 +109,7 @@ export const TestNoMusic = ({ studentEmail }) => {
     }));
 
     const mathResults = mathAnswers.map(a => ({
-      studentEmail,
+      studentEmail: email.toLowerCase(),
       testName: "NoMusic",
       questionType: "math",
       questionId: a.id,
@@ -112,23 +119,42 @@ export const TestNoMusic = ({ studentEmail }) => {
 
     const allResults = [...readingResults, ...mathResults];
 
-    await fetch("/api/saveTestResults", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        studentEmail,
-        testName: "NoMusic",
-        results: allResults,
-      }),
+    console.log("Sending test results:", {
+      studentEmail: email,
+      testName: "NoMusic",
+      results: allResults
     });
 
-    const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
-    if (completed < 1) {
-      localStorage.setItem("completedTests", "1");
-    }
+    try {
+      const res = await fetch("/api/saveTestResults", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentEmail: email,
+          testName: "NoMusic",
+          results: allResults.length ? allResults : [],
+        }),
+      });
 
-    navigate("/testclassical");
+      const data = await res.json();
+      if (!data.success) {
+        console.error("Error saving test results:", data);
+        alert("Failed to save test results. Try again.");
+        return;
+      }
+
+      // Update completed tests counter
+      const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
+      if (completed < 1) localStorage.setItem("completedTests", "1");
+
+      // Navigate to next test
+      navigate("/testclassical");
+    } catch (err) {
+      console.error("Server error saving test results:", err);
+      alert("Server error. Try again later.");
+    }
   };
+
 
   return (
     <div className="relative min-h-screen bg-black text-white px-4 py-12 flex flex-col items-center">
