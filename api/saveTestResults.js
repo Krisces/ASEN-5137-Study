@@ -20,9 +20,10 @@ export default async function handler(req, res) {
         questionType: r.questionType,
         questionId: r.questionId,
         isCorrect: r.isCorrect,
-        responseTimeMs: r.totalTimeMs ?? null, // frontend sends totalTimeMs
+        totalTimeMs: r.totalTimeMs ?? null, // fixed name
       }))
     );
+
 
     res.status(200).json({ success: true });
   } catch (err) {
