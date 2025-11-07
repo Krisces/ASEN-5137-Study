@@ -2,33 +2,28 @@ import { db } from "../backend/dbConfig.js";
 import { SurveySubmissions } from "../backend/schema.js";
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ message: "Method Not Allowed" });
+  if (req.method !== "POST")
+    return res.status(405).json({ message: "Method Not Allowed" });
 
   try {
     const { studentEmail, age, gender, favoriteMusic, dailyMusicHours, isException } = req.body;
 
     if (!studentEmail) return res.status(400).json({ message: "Email required" });
 
-    // Convert optional fields to null if empty
+    // convert optional fields to proper values or null
     const ageVal = age !== undefined && age !== "" ? Number(age) : null;
     const dailyMusicHoursVal = dailyMusicHours !== undefined && dailyMusicHours !== "" ? Number(dailyMusicHours) : null;
-    const genderVal = gender || null;
-    const favoriteMusicVal = favoriteMusic || null;
-    const isExceptionVal = isException ? 1 : 0;
 
-    await db.insert(SurveySubmissions).values({
+    const result = await db.insert(SurveySubmissions).values({
       studentEmail: studentEmail.toLowerCase(),
       age: ageVal,
-      gender: genderVal,
-      favoriteMusic: favoriteMusicVal,
+      gender: gender || null,
+      favoriteMusic: favoriteMusic || null,
       dailyMusicHours: dailyMusicHoursVal,
-      isException: isExceptionVal
-    });
+      isException: isException ? 1 : 0,
+    }).returning(); // <- this lets you see the inserted row
 
-    console.log("Survey inserted for:", studentEmail.toLowerCase());
-
-
-    console.log("Inserted survey:", result);
+    console.log("Survey inserted:", result);
 
     return res.status(200).json({ success: true, row: result });
   } catch (err) {
