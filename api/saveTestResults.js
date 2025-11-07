@@ -1,15 +1,18 @@
 import { db } from "../backend/dbConfig.js";
 import { TestResults } from "../backend/schema.js";
 
-export async function POST(req) {
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method Not Allowed" });
+  }
+
   try {
-    const { studentEmail, testName, results } = await req.json();
+    const { studentEmail, testName, results } = req.body;
 
     if (!studentEmail || !testName || !results) {
-      return new Response(JSON.stringify({ error: "Missing fields" }), { status: 400 });
+      return res.status(400).json({ error: "Missing fields" });
     }
 
-    // Insert all results
     await db.insert(TestResults).values(
       results.map((r) => ({
         studentEmail,
@@ -17,13 +20,13 @@ export async function POST(req) {
         questionType: r.questionType,
         questionId: r.questionId,
         isCorrect: r.isCorrect,
-        responseTimeMs: r.responseTimeMs ?? null,
+        responseTimeMs: r.totalTimeMs ?? null, // frontend sends totalTimeMs
       }))
     );
 
-    return new Response(JSON.stringify({ success: true }), { status: 200 });
-  } catch (error) {
-    console.error(error);
-    return new Response(JSON.stringify({ error: "Database error" }), { status: 500 });
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
   }
 }
