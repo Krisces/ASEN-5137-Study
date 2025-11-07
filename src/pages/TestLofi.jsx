@@ -4,14 +4,17 @@ import { StarBackground } from "../components/StarBackground";
 
 export const TestLofi = ({ studentEmail }) => {
   const navigate = useNavigate();
-  const [stage, setStage] = useState("reading");
+  const [stage, setStage] = useState("reading"); // reading, questions, math, closing
   const [readingAnswers, setReadingAnswers] = useState({});
   const [currentMathIndex, setCurrentMathIndex] = useState(0);
   const [mathAnswers, setMathAnswers] = useState([]);
   const startTimeRef = useRef(null);
   const timerRef = useRef(null);
+  const mathTimerRef = useRef(null);
   const audioRef = useRef(new Audio("/audio/lofi.mp3"));
-  const MAX_TIME_MS = 3 * 60 * 1000; // 3 minutes
+
+  const MAX_TIME_MS = 3 * 60 * 1000; // 3 minutes total
+  const MATH_TIME_MS = 1 * 60 * 1000; // 1 minute for math
 
   const paragraph = `Lofi beats are characterized by soft, relaxing rhythms often used for studying or relaxation. They feature mellow melodies, light percussion, and a generally calm atmosphere. Many people use lofi music as a background while reading, writing, or focusing on tasks. Listening to lofi can help reduce stress and improve concentration.`;
 
@@ -57,6 +60,7 @@ export const TestLofi = ({ studentEmail }) => {
     { id: 41, a: 9, b: 8 }, { id: 42, a: 12, b: 13 }, { id: 43, a: 13, b: 4 },
   ];
 
+  // Total test timer
   useEffect(() => {
     startTimeRef.current = Date.now();
 
@@ -68,16 +72,34 @@ export const TestLofi = ({ studentEmail }) => {
       const elapsed = Date.now() - startTimeRef.current;
       if (elapsed >= MAX_TIME_MS) {
         clearInterval(timerRef.current);
+        clearInterval(mathTimerRef.current);
         setStage("closing");
       }
     }, 500);
 
     return () => {
       clearInterval(timerRef.current);
+      clearInterval(mathTimerRef.current);
       audio.pause();
       audio.currentTime = 0;
     };
   }, []);
+
+  // Start math timer when stage switches
+  useEffect(() => {
+    if (stage === "math") {
+      const mathStartTime = Date.now();
+      mathTimerRef.current = setInterval(() => {
+        const elapsed = Date.now() - mathStartTime;
+        if (elapsed >= MATH_TIME_MS) {
+          clearInterval(mathTimerRef.current);
+          setStage("closing");
+        }
+      }, 500);
+    } else {
+      clearInterval(mathTimerRef.current);
+    }
+  }, [stage]);
 
   const handleQuestionChange = (id, value) =>
     setReadingAnswers({ ...readingAnswers, [id]: value });
@@ -98,6 +120,13 @@ export const TestLofi = ({ studentEmail }) => {
   const handleFinishTest = async () => {
     clearInterval(timerRef.current);
     clearInterval(mathTimerRef.current);
+
+    // stop audio
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
 
     const email = studentEmail || localStorage.getItem("studentEmail");
     if (!email) {
@@ -127,12 +156,6 @@ export const TestLofi = ({ studentEmail }) => {
 
     const allResults = [...readingResults, ...mathResults];
 
-    console.log("Sending test results:", {
-      studentEmail: email,
-      testName: "Lofi",
-      results: allResults
-    });
-
     try {
       const res = await fetch("/api/saveTestResults", {
         method: "POST",
@@ -152,13 +175,12 @@ export const TestLofi = ({ studentEmail }) => {
       }
 
       // Update completed tests counter
-      const currentTestId = 4; // No Music test
+      const currentTestId = 4; // Lofi test
       const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
       if (completed < currentTestId) {
         localStorage.setItem("completedTests", currentTestId.toString());
       }
 
-      // Navigate to next test
       navigate("/studyhome");
     } catch (err) {
       console.error("Server error saving test results:", err);
@@ -171,27 +193,32 @@ export const TestLofi = ({ studentEmail }) => {
       <StarBackground />
       <div className="relative z-10 w-full max-w-3xl space-y-8">
 
+        {/* Reading */}
         {stage === "reading" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4">
             <h1 className="text-3xl font-bold text-center">Reading Comprehension</h1>
             <p className="text-center">Read the paragraph carefully. Questions will follow.</p>
             <p className="bg-gray-700/60 p-4 rounded text-left mt-2 mb-2">{paragraph}</p>
             <div className="text-center">
-              <button onClick={() => setStage("questions")} className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700">
+              <button
+                onClick={() => setStage("questions")}
+                className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700"
+              >
                 Proceed to Questions
               </button>
             </div>
           </div>
         )}
 
+        {/* Questions */}
         {stage === "questions" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-6 text-center">
             <h1 className="text-3xl font-bold mb-4">Reading Questions</h1>
-            {readingQuestions.map((q) => (
+            {readingQuestions.map(q => (
               <div key={q.id} className="space-y-2">
                 <p className="text-center">{q.question}</p>
                 <div className="space-y-1 text-left mx-auto max-w-md">
-                  {q.options.map((opt) => (
+                  {q.options.map(opt => (
                     <label key={opt} className="flex items-center space-x-2">
                       <input
                         type="radio"
@@ -207,17 +234,21 @@ export const TestLofi = ({ studentEmail }) => {
               </div>
             ))}
             <div className="text-center">
-              <button onClick={() => setStage("math")} className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700">
+              <button
+                onClick={() => setStage("math")}
+                className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700"
+              >
                 Proceed to Math
               </button>
             </div>
           </div>
         )}
 
+        {/* Math */}
         {stage === "math" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
             <h1 className="text-3xl font-bold mb-2">Math Problems</h1>
-            <p>Solve the multiplication problems below. Press Enter after each answer.</p>
+            <p>Solve as many multiplication problems as you can. Press Enter after each answer.</p>
             <p className="mt-2">
               Problem {currentMathIndex + 1} of {mathProblems.length}: {mathProblems[currentMathIndex].a} × {mathProblems[currentMathIndex].b} =
             </p>
@@ -230,11 +261,15 @@ export const TestLofi = ({ studentEmail }) => {
           </div>
         )}
 
+        {/* Closing */}
         {stage === "closing" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
             <h1 className="text-3xl font-bold">Test Complete</h1>
             <p>Great job! You have finished this test. Return to the main study page.</p>
-            <button onClick={handleFinishTest} className="bg-green-600 px-4 py-2 rounded hover:bg-green-700">
+            <button
+              onClick={handleFinishTest}
+              className="bg-green-600 px-4 py-2 rounded hover:bg-green-700"
+            >
               Proceed to Study Home
             </button>
           </div>

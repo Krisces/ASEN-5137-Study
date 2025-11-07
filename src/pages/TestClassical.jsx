@@ -150,7 +150,7 @@ export const TestClassical = ({ studentEmail }) => {
         localStorage.setItem("completedTests", currentTestId.toString());
       }
 
-      navigate("/testrock");
+      navigate("/studyhome");
     } catch (err) {
       alert("Server error. Try again later.");
     }
