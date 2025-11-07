@@ -4,17 +4,17 @@ import { StarBackground } from "../components/StarBackground";
 
 export const TestClassical = ({ studentEmail }) => {
   const navigate = useNavigate();
-  const [stage, setStage] = useState("reading"); // reading, questions, math, closing
+  const [stage, setStage] = useState("reading");
   const [readingAnswers, setReadingAnswers] = useState({});
   const [currentMathIndex, setCurrentMathIndex] = useState(0);
   const [mathAnswers, setMathAnswers] = useState([]);
   const startTimeRef = useRef(null);
   const timerRef = useRef(null);
   const mathTimerRef = useRef(null);
-  const audioRef = useRef(new Audio("/audio/classical.mp3")); // Add your classical music file
+  const audioRef = useRef(new Audio("/audio/classical.mp3"));
 
-  const MAX_TIME_MS = 3 * 60 * 1000; // 3 minutes overall
-  const MATH_TIME_MS = 1 * 60 * 1000; // 1 minute for math section
+  const MAX_TIME_MS = 3 * 60 * 1000; // 3 minutes
+  const MATH_TIME_MS = 1 * 60 * 1000; // 1 minute
 
   const paragraph = `Classical music has a long history and has influenced many forms of art and culture. Composers like Mozart and Beethoven created works that are still widely performed today. The structure of classical compositions often includes symphonies, concertos, and sonatas, and the music is known for its emotional depth and technical precision. Listening to classical music has been associated with relaxation, focus, and enhanced cognitive performance.`;
 
@@ -40,6 +40,7 @@ export const TestClassical = ({ studentEmail }) => {
     { id: 41, a: 9, b: 6 }, { id: 42, a: 12, b: 13 }, { id: 43, a: 13, b: 7 }
   ];
 
+  // ---- Timers and Music ----
   useEffect(() => {
     startTimeRef.current = Date.now();
 
@@ -49,11 +50,7 @@ export const TestClassical = ({ studentEmail }) => {
 
     timerRef.current = setInterval(() => {
       const elapsed = Date.now() - startTimeRef.current;
-      if (elapsed >= MAX_TIME_MS) {
-        clearInterval(timerRef.current);
-        clearInterval(mathTimerRef.current);
-        setStage("closing");
-      }
+      if (elapsed >= MAX_TIME_MS) setStage("closing");
     }, 500);
 
     return () => {
@@ -69,16 +66,72 @@ export const TestClassical = ({ studentEmail }) => {
       const mathStartTime = Date.now();
       mathTimerRef.current = setInterval(() => {
         const elapsed = Date.now() - mathStartTime;
-        if (elapsed >= MATH_TIME_MS) {
-          clearInterval(mathTimerRef.current);
-          setStage("closing");
-        }
+        if (elapsed >= MATH_TIME_MS) setStage("closing");
       }, 500);
     } else {
       clearInterval(mathTimerRef.current);
     }
   }, [stage]);
 
+  // ---- Auto-Save Results When Closing ----
+  useEffect(() => {
+    if (stage === "closing") {
+      const saveResults = async () => {
+        const email = studentEmail || localStorage.getItem("studentEmail");
+        if (!email) return;
+
+        const totalTimeMs = Math.min(Date.now() - startTimeRef.current, MAX_TIME_MS);
+
+        const readingResults = readingQuestions.map(q => ({
+          studentEmail: email.toLowerCase(),
+          testName: "Classical",
+          questionType: "reading",
+          questionId: q.id,
+          isCorrect: readingAnswers[q.id] === q.options[0],
+          totalTimeMs
+        }));
+
+        const mathResults = mathAnswers.map(a => ({
+          studentEmail: email.toLowerCase(),
+          testName: "Classical",
+          questionType: "math",
+          questionId: a.id,
+          isCorrect: a.answer === a.a * a.b,
+          totalTimeMs
+        }));
+
+        const allResults = [...readingResults, ...mathResults];
+
+        try {
+          const res = await fetch("/api/saveTestResults", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              studentEmail: email,
+              testName: "Classical",
+              results: allResults.length ? allResults : [],
+            }),
+          });
+
+          const data = await res.json();
+          if (!data.success) console.error("Error saving test results:", data);
+
+          // Unlock next test
+          const currentTestId = 2;
+          const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
+          if (completed < currentTestId) {
+            localStorage.setItem("completedTests", currentTestId.toString());
+          }
+        } catch (err) {
+          console.error("Server error saving test results:", err);
+        }
+      };
+
+      saveResults();
+    }
+  }, [stage]);
+
+  // ---- Handlers ----
   const handleQuestionChange = (id, value) =>
     setReadingAnswers({ ...readingAnswers, [id]: value });
 
@@ -95,72 +148,13 @@ export const TestClassical = ({ studentEmail }) => {
     }
   };
 
-  const handleFinishTest = async () => {
-    clearInterval(timerRef.current);
-    clearInterval(mathTimerRef.current);
-
-    const email = studentEmail || localStorage.getItem("studentEmail");
-    if (!email) {
-      alert("Student email not found. Please start from the survey page.");
-      return;
-    }
-
-    const totalTimeMs = Math.min(Date.now() - startTimeRef.current, MAX_TIME_MS);
-
-    const readingResults = readingQuestions.map(q => ({
-      studentEmail: email.toLowerCase(),
-      testName: "Classical",
-      questionType: "reading",
-      questionId: q.id,
-      isCorrect: readingAnswers[q.id] === q.options[0],
-      totalTimeMs
-    }));
-
-    const mathResults = mathAnswers.map(a => ({
-      studentEmail: email.toLowerCase(),
-      testName: "Classical",
-      questionType: "math",
-      questionId: a.id,
-      isCorrect: a.answer === a.a * a.b,
-      totalTimeMs
-    }));
-
-    const allResults = [...readingResults, ...mathResults];
-
-    try {
-      const res = await fetch("/api/saveTestResults", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          studentEmail: email,
-          testName: "Classical",
-          results: allResults.length ? allResults : [],
-        }),
-      });
-
-      const data = await res.json();
-      if (!data.success) {
-        alert("Failed to save test results. Try again.");
-        return;
-      }
-
-      const currentTestId = 2;
-      const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
-      if (completed < currentTestId) {
-        localStorage.setItem("completedTests", currentTestId.toString());
-      }
-
-      navigate("/studyhome");
-    } catch (err) {
-      alert("Server error. Try again later.");
-    }
-  };
-
+  // ---- Render ----
   return (
     <div className="relative min-h-screen bg-black text-white px-4 py-12 flex flex-col items-center">
       <StarBackground />
       <div className="relative z-10 w-full max-w-3xl space-y-8">
 
+        {/* Reading Stage */}
         {stage === "reading" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4">
             <h1 className="text-3xl font-bold text-center">Reading Comprehension</h1>
@@ -177,6 +171,7 @@ export const TestClassical = ({ studentEmail }) => {
           </div>
         )}
 
+        {/* Questions Stage */}
         {stage === "questions" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-6 text-center">
             <h1 className="text-3xl font-bold mb-4">Reading Questions</h1>
@@ -210,6 +205,7 @@ export const TestClassical = ({ studentEmail }) => {
           </div>
         )}
 
+        {/* Math Stage */}
         {stage === "math" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
             <h1 className="text-3xl font-bold mb-2">Math Problems</h1>
@@ -227,12 +223,13 @@ export const TestClassical = ({ studentEmail }) => {
           </div>
         )}
 
+        {/* Closing Stage */}
         {stage === "closing" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
             <h1 className="text-3xl font-bold">Test Complete</h1>
             <p>Great job! You have finished this test. Proceed to the next test when ready.</p>
             <button
-              onClick={handleFinishTest}
+              onClick={() => navigate("/studyhome")}
               className="bg-green-600 px-4 py-2 rounded hover:bg-green-700"
             >
               Proceed to Next Test

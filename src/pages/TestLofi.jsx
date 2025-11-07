@@ -4,7 +4,7 @@ import { StarBackground } from "../components/StarBackground";
 
 export const TestLofi = ({ studentEmail }) => {
   const navigate = useNavigate();
-  const [stage, setStage] = useState("reading"); // reading, questions, math, closing
+  const [stage, setStage] = useState("reading");
   const [readingAnswers, setReadingAnswers] = useState({});
   const [currentMathIndex, setCurrentMathIndex] = useState(0);
   const [mathAnswers, setMathAnswers] = useState([]);
@@ -13,37 +13,17 @@ export const TestLofi = ({ studentEmail }) => {
   const mathTimerRef = useRef(null);
   const audioRef = useRef(new Audio("/audio/lofi.mp3"));
 
-  const MAX_TIME_MS = 3 * 60 * 1000; // 3 minutes total
-  const MATH_TIME_MS = 1 * 60 * 1000; // 1 minute for math
+  const MAX_TIME_MS = 3 * 60 * 1000; // 3 minutes
+  const MATH_TIME_MS = 1 * 60 * 1000; // 1 minute
 
   const paragraph = `Lofi beats are characterized by soft, relaxing rhythms often used for studying or relaxation. They feature mellow melodies, light percussion, and a generally calm atmosphere. Many people use lofi music as a background while reading, writing, or focusing on tasks. Listening to lofi can help reduce stress and improve concentration.`;
 
   const readingQuestions = [
-    {
-      id: 1,
-      question: "What is lofi music commonly used for?",
-      options: ["Studying, relaxing, or focusing", "Dancing at parties", "Live concerts", "Film soundtracks"],
-    },
-    {
-      id: 2,
-      question: "What are characteristics of lofi beats?",
-      options: ["Mellow melodies and calm atmosphere", "Heavy metal guitar riffs", "Fast-paced electronic rhythms", "Orchestral arrangements"],
-    },
-    {
-      id: 3,
-      question: "Lofi music helps improve what?",
-      options: ["Concentration", "Physical strength", "Running speed", "Mathematics skills"],
-    },
-    {
-      id: 4,
-      question: "What instruments are common in lofi?",
-      options: ["Light percussion and mellow melodies", "Electric guitar and drums", "Synthesizers only", "Brass and woodwinds"],
-    },
-    {
-      id: 5,
-      question: "Lofi music creates what kind of atmosphere?",
-      options: ["Calm and relaxing", "Chaotic and loud", "Intense and fast", "Sad and gloomy"],
-    },
+    { id: 1, question: "What is lofi music commonly used for?", options: ["Studying, relaxing, or focusing", "Dancing at parties", "Live concerts", "Film soundtracks"] },
+    { id: 2, question: "What are characteristics of lofi beats?", options: ["Mellow melodies and calm atmosphere", "Heavy metal guitar riffs", "Fast-paced electronic rhythms", "Orchestral arrangements"] },
+    { id: 3, question: "Lofi music helps improve what?", options: ["Concentration", "Physical strength", "Running speed", "Mathematics skills"] },
+    { id: 4, question: "What instruments are common in lofi?", options: ["Light percussion and mellow melodies", "Electric guitar and drums", "Synthesizers only", "Brass and woodwinds"] },
+    { id: 5, question: "Lofi music creates what kind of atmosphere?", options: ["Calm and relaxing", "Chaotic and loud", "Intense and fast", "Sad and gloomy"] },
   ];
 
   const mathProblems = [
@@ -60,21 +40,16 @@ export const TestLofi = ({ studentEmail }) => {
     { id: 41, a: 9, b: 8 }, { id: 42, a: 12, b: 13 }, { id: 43, a: 13, b: 4 },
   ];
 
-  // Total test timer
+  // Start timers and music
   useEffect(() => {
     startTimeRef.current = Date.now();
-
     const audio = audioRef.current;
     audio.loop = true;
     audio.play().catch(() => console.log("Autoplay blocked"));
 
     timerRef.current = setInterval(() => {
       const elapsed = Date.now() - startTimeRef.current;
-      if (elapsed >= MAX_TIME_MS) {
-        clearInterval(timerRef.current);
-        clearInterval(mathTimerRef.current);
-        setStage("closing");
-      }
+      if (elapsed >= MAX_TIME_MS) setStage("closing");
     }, 500);
 
     return () => {
@@ -85,19 +60,80 @@ export const TestLofi = ({ studentEmail }) => {
     };
   }, []);
 
-  // Start math timer when stage switches
   useEffect(() => {
     if (stage === "math") {
       const mathStartTime = Date.now();
       mathTimerRef.current = setInterval(() => {
         const elapsed = Date.now() - mathStartTime;
-        if (elapsed >= MATH_TIME_MS) {
-          clearInterval(mathTimerRef.current);
-          setStage("closing");
-        }
+        if (elapsed >= MATH_TIME_MS) setStage("closing");
       }, 500);
     } else {
       clearInterval(mathTimerRef.current);
+    }
+  }, [stage]);
+
+  // Auto-save results when test ends
+  useEffect(() => {
+    if (stage === "closing") {
+      const saveResults = async () => {
+        clearInterval(timerRef.current);
+        clearInterval(mathTimerRef.current);
+        const audio = audioRef.current;
+        if (audio) {
+          audio.pause();
+          audio.currentTime = 0;
+        }
+
+        const email = studentEmail || localStorage.getItem("studentEmail");
+        if (!email) return;
+
+        const totalTimeMs = Math.min(Date.now() - startTimeRef.current, MAX_TIME_MS);
+
+        const readingResults = readingQuestions.map(q => ({
+          studentEmail: email.toLowerCase(),
+          testName: "Lofi",
+          questionType: "reading",
+          questionId: q.id,
+          isCorrect: readingAnswers[q.id] === q.options[0],
+          totalTimeMs,
+        }));
+
+        const mathResults = mathAnswers.map(a => ({
+          studentEmail: email.toLowerCase(),
+          testName: "Lofi",
+          questionType: "math",
+          questionId: a.id,
+          isCorrect: a.answer === a.a * a.b,
+          totalTimeMs,
+        }));
+
+        const allResults = [...readingResults, ...mathResults];
+
+        try {
+          const res = await fetch("/api/saveTestResults", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              studentEmail: email,
+              testName: "Lofi",
+              results: allResults.length ? allResults : [],
+            }),
+          });
+
+          const data = await res.json();
+          if (!data.success) console.error("Error saving test results:", data);
+
+          const currentTestId = 4;
+          const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
+          if (completed < currentTestId) {
+            localStorage.setItem("completedTests", currentTestId.toString());
+          }
+        } catch (err) {
+          console.error("Server error saving test results:", err);
+        }
+      };
+
+      saveResults();
     }
   }, [stage]);
 
@@ -114,77 +150,6 @@ export const TestLofi = ({ studentEmail }) => {
       } else {
         setStage("closing");
       }
-    }
-  };
-
-  const handleFinishTest = async () => {
-    clearInterval(timerRef.current);
-    clearInterval(mathTimerRef.current);
-
-    // stop audio
-    const audio = audioRef.current;
-    if (audio) {
-      audio.pause();
-      audio.currentTime = 0;
-    }
-
-    const email = studentEmail || localStorage.getItem("studentEmail");
-    if (!email) {
-      alert("Student email not found. Please start from the survey page.");
-      return;
-    }
-
-    const totalTimeMs = Math.min(Date.now() - startTimeRef.current, MAX_TIME_MS);
-
-    const readingResults = readingQuestions.map(q => ({
-      studentEmail: email.toLowerCase(),
-      testName: "Lofi",
-      questionType: "reading",
-      questionId: q.id,
-      isCorrect: readingAnswers[q.id] === q.options[0],
-      totalTimeMs
-    }));
-
-    const mathResults = mathAnswers.map(a => ({
-      studentEmail: email.toLowerCase(),
-      testName: "Lofi",
-      questionType: "math",
-      questionId: a.id,
-      isCorrect: a.answer === a.a * a.b,
-      totalTimeMs
-    }));
-
-    const allResults = [...readingResults, ...mathResults];
-
-    try {
-      const res = await fetch("/api/saveTestResults", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          studentEmail: email,
-          testName: "Lofi",
-          results: allResults.length ? allResults : [],
-        }),
-      });
-
-      const data = await res.json();
-      if (!data.success) {
-        console.error("Error saving test results:", data);
-        alert("Failed to save test results. Try again.");
-        return;
-      }
-
-      // Update completed tests counter
-      const currentTestId = 4; // Lofi test
-      const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
-      if (completed < currentTestId) {
-        localStorage.setItem("completedTests", currentTestId.toString());
-      }
-
-      navigate("/studyhome");
-    } catch (err) {
-      console.error("Server error saving test results:", err);
-      alert("Server error. Try again later.");
     }
   };
 
@@ -248,7 +213,7 @@ export const TestLofi = ({ studentEmail }) => {
         {stage === "math" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
             <h1 className="text-3xl font-bold mb-2">Math Problems</h1>
-            <p>Solve as many multiplication problems as you can. Press Enter after each answer.</p>
+            <p>Solve as many as you can. Press Enter after each answer.</p>
             <p className="mt-2">
               Problem {currentMathIndex + 1} of {mathProblems.length}: {mathProblems[currentMathIndex].a} × {mathProblems[currentMathIndex].b} =
             </p>
@@ -265,16 +230,15 @@ export const TestLofi = ({ studentEmail }) => {
         {stage === "closing" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
             <h1 className="text-3xl font-bold">Test Complete</h1>
-            <p>Great job! You have finished this test. Return to the main study page.</p>
+            <p>Great job! You’ve finished this test. Proceed when ready.</p>
             <button
-              onClick={handleFinishTest}
+              onClick={() => navigate("/studyhome")}
               className="bg-green-600 px-4 py-2 rounded hover:bg-green-700"
             >
               Proceed to Study Home
             </button>
           </div>
         )}
-
       </div>
     </div>
   );

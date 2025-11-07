@@ -19,31 +19,11 @@ export const TestRock = ({ studentEmail }) => {
   const paragraph = `Rock music from the 70s and 80s has shaped popular culture and influenced generations of musicians. Bands like Queen, Led Zeppelin, and The Rolling Stones created iconic songs that remain popular today. Rock music often features strong guitar riffs, memorable melodies, and energetic rhythms. Listening to rock music can energize listeners and evoke feelings of excitement and nostalgia.`;
 
   const readingQuestions = [
-    {
-      id: 1,
-      question: "Which bands are mentioned in the paragraph?",
-      options: ["Queen, Led Zeppelin, The Rolling Stones", "Nirvana, Pearl Jam, Metallica", "The Beatles, Oasis, Blur", "Coldplay, U2, Radiohead"],
-    },
-    {
-      id: 2,
-      question: "What are characteristics of 70s/80s rock music?",
-      options: ["Strong guitar riffs and energetic rhythms", "Slow melodies and soft vocals", "Electronic beats and synths", "Jazz improvisation and swing"],
-    },
-    {
-      id: 3,
-      question: "Listening to rock music can evoke what?",
-      options: ["Excitement and nostalgia", "Hunger", "Sleepiness", "Anxiety"],
-    },
-    {
-      id: 4,
-      question: "Are songs from these bands still popular today?",
-      options: ["Yes", "No", "Only in movies", "Only on radio"],
-    },
-    {
-      id: 5,
-      question: "Which era of rock music is discussed?",
-      options: ["70s and 80s", "60s", "90s", "2000s"],
-    },
+    { id: 1, question: "Which bands are mentioned in the paragraph?", options: ["Queen, Led Zeppelin, The Rolling Stones", "Nirvana, Pearl Jam, Metallica", "The Beatles, Oasis, Blur", "Coldplay, U2, Radiohead"] },
+    { id: 2, question: "What are characteristics of 70s/80s rock music?", options: ["Strong guitar riffs and energetic rhythms", "Slow melodies and soft vocals", "Electronic beats and synths", "Jazz improvisation and swing"] },
+    { id: 3, question: "Listening to rock music can evoke what?", options: ["Excitement and nostalgia", "Hunger", "Sleepiness", "Anxiety"] },
+    { id: 4, question: "Are songs from these bands still popular today?", options: ["Yes", "No", "Only in movies", "Only on radio"] },
+    { id: 5, question: "Which era of rock music is discussed?", options: ["70s and 80s", "60s", "90s", "2000s"] },
   ];
 
   const mathProblems = [
@@ -60,20 +40,16 @@ export const TestRock = ({ studentEmail }) => {
     { id: 41, a: 9, b: 4 }, { id: 42, a: 12, b: 12 }, { id: 43, a: 13, b: 2 },
   ];
 
+  // Start timers and music
   useEffect(() => {
     startTimeRef.current = Date.now();
-
     const audio = audioRef.current;
     audio.loop = true;
     audio.play().catch(() => console.log("Autoplay blocked"));
 
     timerRef.current = setInterval(() => {
       const elapsed = Date.now() - startTimeRef.current;
-      if (elapsed >= MAX_TIME_MS) {
-        clearInterval(timerRef.current);
-        clearInterval(mathTimerRef.current);
-        setStage("closing");
-      }
+      if (elapsed >= MAX_TIME_MS) setStage("closing");
     }, 500);
 
     return () => {
@@ -84,21 +60,78 @@ export const TestRock = ({ studentEmail }) => {
     };
   }, []);
 
+  // Math timer
   useEffect(() => {
     if (stage === "math") {
-      const mathStartTime = Date.now();
+      const mathStart = Date.now();
       mathTimerRef.current = setInterval(() => {
-        const elapsed = Date.now() - mathStartTime;
-        if (elapsed >= MATH_TIME_MS) {
-          clearInterval(mathTimerRef.current);
-          setStage("closing");
-        }
+        const elapsed = Date.now() - mathStart;
+        if (elapsed >= MATH_TIME_MS) setStage("closing");
       }, 500);
     } else {
       clearInterval(mathTimerRef.current);
     }
   }, [stage]);
 
+  // Auto-save results when closing
+  useEffect(() => {
+    if (stage === "closing") {
+      const saveResults = async () => {
+        const email = studentEmail || localStorage.getItem("studentEmail");
+        if (!email) return;
+
+        const totalTimeMs = Math.min(Date.now() - startTimeRef.current, MAX_TIME_MS);
+
+        const readingResults = readingQuestions.map(q => ({
+          studentEmail: email.toLowerCase(),
+          testName: "Rock",
+          questionType: "reading",
+          questionId: q.id,
+          isCorrect: readingAnswers[q.id] === q.options[0],
+          totalTimeMs
+        }));
+
+        const mathResults = mathAnswers.map(a => ({
+          studentEmail: email.toLowerCase(),
+          testName: "Rock",
+          questionType: "math",
+          questionId: a.id,
+          isCorrect: a.answer === a.a * a.b,
+          totalTimeMs
+        }));
+
+        const allResults = [...readingResults, ...mathResults];
+
+        try {
+          const res = await fetch("/api/saveTestResults", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              studentEmail: email,
+              testName: "Rock",
+              results: allResults.length ? allResults : [],
+            }),
+          });
+
+          const data = await res.json();
+          if (!data.success) console.error("Error saving test results:", data);
+
+          // Unlock next test
+          const currentTestId = 3;
+          const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
+          if (completed < currentTestId) {
+            localStorage.setItem("completedTests", currentTestId.toString());
+          }
+        } catch (err) {
+          console.error("Server error saving test results:", err);
+        }
+      };
+
+      saveResults();
+    }
+  }, [stage]);
+
+  // Handlers
   const handleQuestionChange = (id, value) =>
     setReadingAnswers({ ...readingAnswers, [id]: value });
 
@@ -115,95 +148,30 @@ export const TestRock = ({ studentEmail }) => {
     }
   };
 
-  const handleFinishTest = async () => {
-    clearInterval(timerRef.current);
-    clearInterval(mathTimerRef.current);
-
-    const email = studentEmail || localStorage.getItem("studentEmail");
-    if (!email) {
-      alert("Student email not found. Please start from the survey page.");
-      return;
-    }
-
-    const totalTimeMs = Math.min(Date.now() - startTimeRef.current, MAX_TIME_MS);
-
-    const readingResults = readingQuestions.map(q => ({
-      studentEmail: email.toLowerCase(),
-      testName: "Rock",
-      questionType: "reading",
-      questionId: q.id,
-      isCorrect: readingAnswers[q.id] === q.options[0],
-      totalTimeMs
-    }));
-
-    const mathResults = mathAnswers.map(a => ({
-      studentEmail: email.toLowerCase(),
-      testName: "Rock",
-      questionType: "math",
-      questionId: a.id,
-      isCorrect: a.answer === a.a * a.b,
-      totalTimeMs
-    }));
-
-    const allResults = [...readingResults, ...mathResults];
-
-    console.log("Sending test results:", {
-      studentEmail: email,
-      testName: "Rock",
-      results: allResults
-    });
-
-    try {
-      const res = await fetch("/api/saveTestResults", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          studentEmail: email,
-          testName: "Rock",
-          results: allResults.length ? allResults : [],
-        }),
-      });
-
-      const data = await res.json();
-      if (!data.success) {
-        console.error("Error saving test results:", data);
-        alert("Failed to save test results. Try again.");
-        return;
-      }
-
-      // Update completed tests counter
-      const currentTestId = 3; // No Music test
-      const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
-      if (completed < currentTestId) {
-        localStorage.setItem("completedTests", currentTestId.toString());
-      }
-
-      // Navigate to next test
-      navigate("/studyhome");
-    } catch (err) {
-      console.error("Server error saving test results:", err);
-      alert("Server error. Try again later.");
-    }
-  };
-
+  // Render
   return (
     <div className="relative min-h-screen bg-black text-white px-4 py-12 flex flex-col items-center">
       <StarBackground />
       <div className="relative z-10 w-full max-w-3xl space-y-8">
 
+        {/* Reading */}
         {stage === "reading" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4">
             <h1 className="text-3xl font-bold text-center">Reading Comprehension</h1>
             <p className="text-center">Read the paragraph carefully. Questions will follow.</p>
             <p className="bg-gray-700/60 p-4 rounded text-left mt-2 mb-2">{paragraph}</p>
             <div className="text-center">
-              <button onClick={() => setStage("questions")} className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700">
+              <button
+                onClick={() => setStage("questions")}
+                className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700"
+              >
                 Proceed to Questions
               </button>
             </div>
           </div>
         )}
 
+        {/* Questions */}
         {stage === "questions" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-6 text-center">
             <h1 className="text-3xl font-bold mb-4">Reading Questions</h1>
@@ -227,19 +195,24 @@ export const TestRock = ({ studentEmail }) => {
               </div>
             ))}
             <div className="text-center">
-              <button onClick={() => setStage("math")} className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700">
+              <button
+                onClick={() => setStage("math")}
+                className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700"
+              >
                 Proceed to Math
               </button>
             </div>
           </div>
         )}
 
+        {/* Math */}
         {stage === "math" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
             <h1 className="text-3xl font-bold mb-2">Math Problems</h1>
             <p>Solve the multiplication problems below. Press Enter after each answer.</p>
             <p className="mt-2">
-              Problem {currentMathIndex + 1} of {mathProblems.length}: {mathProblems[currentMathIndex].a} × {mathProblems[currentMathIndex].b} =
+              Problem {currentMathIndex + 1} of {mathProblems.length}:{" "}
+              {mathProblems[currentMathIndex].a} × {mathProblems[currentMathIndex].b} =
             </p>
             <input
               type="number"
@@ -250,11 +223,15 @@ export const TestRock = ({ studentEmail }) => {
           </div>
         )}
 
+        {/* Closing */}
         {stage === "closing" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
             <h1 className="text-3xl font-bold">Test Complete</h1>
             <p>Great job! You have finished this test. Proceed to the next test when ready.</p>
-            <button onClick={handleFinishTest} className="bg-green-600 px-4 py-2 rounded hover:bg-green-700">
+            <button
+              onClick={() => navigate("/studyhome")}
+              className="bg-green-600 px-4 py-2 rounded hover:bg-green-700"
+            >
               Proceed to Next Test
             </button>
           </div>

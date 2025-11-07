@@ -29,15 +29,22 @@ export const TestNoMusic = ({ studentEmail }) => {
     { id: 41, a: 9, b: 13 }, { id: 42, a: 12, b: 10 }, { id: 43, a: 13, b: 13 }
   ];
 
+  const paragraph = `Bees are essential pollinators in many ecosystems, helping plants reproduce by transferring pollen from flower to flower. They communicate using dances to indicate food sources to other bees in the hive. A single bee can visit hundreds of flowers in a day, collecting nectar and pollen to support its colony, while also contributing to the growth of fruits and vegetables. The health of bee populations directly impacts the success of many crops humans rely on. Conserving habitats and reducing pesticide use are key to protecting bees and maintaining balanced ecosystems.`;
+
+  const readingQuestions = [
+    { id: 1, question: "What is the main role of bees in ecosystems?", options: ["Pollination", "Hibernation", "Migration", "Photosynthesis"] },
+    { id: 2, question: "How do bees communicate about food sources?", options: ["Dancing", "Singing", "Changing color", "Making patterns"] },
+    { id: 3, question: "What happens when bee populations decline?", options: ["Crop yields can drop", "Bees become stronger", "Flowers stop growing", "Honey disappears"] },
+    { id: 4, question: "What can help protect bees?", options: ["Reducing pesticide use", "Using more chemicals", "Capturing wild bees", "Planting fewer flowers"] },
+    { id: 5, question: "What do bees collect from flowers?", options: ["Nectar and pollen", "Seeds and roots", "Leaves and bark", "Water and soil"] },
+  ];
+
+  // ---- Timers ----
   useEffect(() => {
     startTimeRef.current = Date.now();
     timerRef.current = setInterval(() => {
       const elapsed = Date.now() - startTimeRef.current;
-      if (elapsed >= MAX_TIME_MS) {
-        clearInterval(timerRef.current);
-        clearInterval(mathTimerRef.current);
-        setStage("closing");
-      }
+      if (elapsed >= MAX_TIME_MS) setStage("closing");
     }, 500);
 
     return () => {
@@ -51,26 +58,72 @@ export const TestNoMusic = ({ studentEmail }) => {
       const mathStartTime = Date.now();
       mathTimerRef.current = setInterval(() => {
         const elapsed = Date.now() - mathStartTime;
-        if (elapsed >= MATH_TIME_MS) {
-          clearInterval(mathTimerRef.current);
-          setStage("closing");
-        }
+        if (elapsed >= MATH_TIME_MS) setStage("closing");
       }, 500);
     } else {
       clearInterval(mathTimerRef.current);
     }
   }, [stage]);
 
-  const paragraph = `Bees are essential pollinators in many ecosystems, helping plants reproduce by transferring pollen from flower to flower. They communicate using dances to indicate food sources to other bees in the hive. A single bee can visit hundreds of flowers in a day, collecting nectar and pollen to support its colony, while also contributing to the growth of fruits and vegetables. The health of bee populations directly impacts the success of many crops humans rely on. Conserving habitats and reducing pesticide use are key to protecting bees and maintaining balanced ecosystems.`;
+  // ---- Save results when stage becomes "closing" ----
+  useEffect(() => {
+    if (stage === "closing") {
+      const saveResults = async () => {
+        const email = studentEmail || localStorage.getItem("studentEmail");
+        if (!email) return;
 
-  const readingQuestions = [
-    { id: 1, question: "What is the main role of bees in ecosystems?", options: ["Pollination", "Hibernation", "Migration", "Photosynthesis"] },
-    { id: 2, question: "How do bees communicate about food sources?", options: ["Dancing", "Singing", "Changing color", "Making patterns"] },
-    { id: 3, question: "What happens when bee populations decline?", options: ["Crop yields can drop", "Bees become stronger", "Flowers stop growing", "Honey disappears"] },
-    { id: 4, question: "What can help protect bees?", options: ["Reducing pesticide use", "Using more chemicals", "Capturing wild bees", "Planting fewer flowers"] },
-    { id: 5, question: "What do bees collect from flowers?", options: ["Nectar and pollen", "Seeds and roots", "Leaves and bark", "Water and soil"] },
-  ];
+        const totalTimeMs = Math.min(Date.now() - startTimeRef.current, MAX_TIME_MS);
 
+        const readingResults = readingQuestions.map(q => ({
+          studentEmail: email.toLowerCase(),
+          testName: "NoMusic",
+          questionType: "reading",
+          questionId: q.id,
+          isCorrect: readingAnswers[q.id] === q.options[0],
+          totalTimeMs
+        }));
+
+        const mathResults = mathAnswers.map(a => ({
+          studentEmail: email.toLowerCase(),
+          testName: "NoMusic",
+          questionType: "math",
+          questionId: a.id,
+          isCorrect: a.answer === a.a * a.b,
+          totalTimeMs
+        }));
+
+        const allResults = [...readingResults, ...mathResults];
+
+        try {
+          const res = await fetch("/api/saveTestResults", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              studentEmail: email,
+              testName: "NoMusic",
+              results: allResults.length ? allResults : [],
+            }),
+          });
+
+          const data = await res.json();
+          if (!data.success) console.error("Error saving test results:", data);
+
+          // Update completed tests counter
+          const currentTestId = 1;
+          const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
+          if (completed < currentTestId) {
+            localStorage.setItem("completedTests", currentTestId.toString());
+          }
+        } catch (err) {
+          console.error("Server error saving test results:", err);
+        }
+      };
+
+      saveResults();
+    }
+  }, [stage]);
+
+  // ---- Handlers ----
   const handleQuestionChange = (id, value) =>
     setReadingAnswers({ ...readingAnswers, [id]: value });
 
@@ -87,78 +140,7 @@ export const TestNoMusic = ({ studentEmail }) => {
     }
   };
 
-  const handleFinishTest = async () => {
-    clearInterval(timerRef.current);
-    clearInterval(mathTimerRef.current);
-
-    const email = studentEmail || localStorage.getItem("studentEmail");
-    if (!email) {
-      alert("Student email not found. Please start from the survey page.");
-      return;
-    }
-
-    const totalTimeMs = Math.min(Date.now() - startTimeRef.current, MAX_TIME_MS);
-
-    const readingResults = readingQuestions.map(q => ({
-      studentEmail: email.toLowerCase(),
-      testName: "NoMusic",
-      questionType: "reading",
-      questionId: q.id,
-      isCorrect: readingAnswers[q.id] === q.options[0],
-      totalTimeMs
-    }));
-
-    const mathResults = mathAnswers.map(a => ({
-      studentEmail: email.toLowerCase(),
-      testName: "NoMusic",
-      questionType: "math",
-      questionId: a.id,
-      isCorrect: a.answer === a.a * a.b,
-      totalTimeMs
-    }));
-
-    const allResults = [...readingResults, ...mathResults];
-
-    console.log("Sending test results:", {
-      studentEmail: email,
-      testName: "NoMusic",
-      results: allResults
-    });
-
-    try {
-      const res = await fetch("/api/saveTestResults", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          studentEmail: email,
-          testName: "NoMusic",
-          results: allResults.length ? allResults : [],
-        }),
-      });
-
-      const data = await res.json();
-      if (!data.success) {
-        console.error("Error saving test results:", data);
-        alert("Failed to save test results. Try again.");
-        return;
-      }
-
-      // Update completed tests counter
-      const currentTestId = 1; // No Music test
-      const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
-      if (completed < currentTestId) {
-        localStorage.setItem("completedTests", currentTestId.toString());
-      }
-
-      // Navigate to next test
-      navigate("/studyhome");
-    } catch (err) {
-      console.error("Server error saving test results:", err);
-      alert("Server error. Try again later.");
-    }
-  };
-
-
+  // ---- Render ----
   return (
     <div className="relative min-h-screen bg-black text-white px-4 py-12 flex flex-col items-center">
       <StarBackground />
@@ -239,7 +221,7 @@ export const TestNoMusic = ({ studentEmail }) => {
             <h1 className="text-3xl font-bold">Test Complete</h1>
             <p>Great job! You have finished this test. Proceed to the next test when ready.</p>
             <button
-              onClick={handleFinishTest}
+              onClick={() => navigate("/studyhome")}
               className="bg-green-600 px-4 py-2 rounded hover:bg-green-700"
             >
               Proceed to Next Test
