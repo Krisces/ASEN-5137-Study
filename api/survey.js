@@ -1,4 +1,4 @@
-// /api/survey.js (backend handler)
+// /api/survey.js
 import { db } from "../backend/dbConfig.js";
 import { SurveySubmissions } from "../backend/schema.js";
 
@@ -8,27 +8,56 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { studentEmail, age, gender, favoriteMusic, dailyMusicHours, isException } = req.body;
+    const {
+      studentEmail,
+      age,
+      gender,
+      favoriteMusic,
+      dailyMusicHours,
+      isException
+    } = req.body;
 
-    if (!studentEmail) return res.status(400).json({ message: "Email required" });
+    if (!studentEmail) {
+      return res.status(400).json({ message: "Email required" });
+    }
 
-    // -----------------------------
-    // Minimal change: allow NULL for age, gender, favoriteMusic, dailyMusicHours
-    // for exception emails so DB insert won't fail
-    // -----------------------------
-    const result = await db.insert(SurveySubmissions).values({
-      studentEmail: studentEmail.toLowerCase(),
-      age: age ? Number(age) : null,
-      gender: gender || null,
-      favoriteMusic: favoriteMusic || null,
-      dailyMusicHours: dailyMusicHours ? Number(dailyMusicHours) : null,
-      isException: isException ? 1 : 0
+    // Ensure optional fields are null if empty
+    const ageVal = age !== undefined && age !== "" ? Number(age) : null;
+    const dailyMusicHoursVal =
+      dailyMusicHours !== undefined && dailyMusicHours !== ""
+        ? Number(dailyMusicHours)
+        : null;
+    const genderVal = gender || null;
+    const favoriteMusicVal = favoriteMusic || null;
+    const isExceptionVal = isException ? 1 : 0;
+
+    console.log("Survey submission payload:", {
+      studentEmail,
+      age: ageVal,
+      gender: genderVal,
+      favoriteMusic: favoriteMusicVal,
+      dailyMusicHours: dailyMusicHoursVal,
+      isException: isExceptionVal
     });
 
+    // Insert into Neon DB
+    const result = await db.insert(SurveySubmissions).values({
+      studentEmail: studentEmail.toLowerCase(),
+      age: ageVal,
+      gender: genderVal,
+      favoriteMusic: favoriteMusicVal,
+      dailyMusicHours: dailyMusicHoursVal,
+      isException: isExceptionVal
+      // createdAt handled by defaultNow()
+    });
+
+    console.log("Insert result:", result);
 
     return res.status(200).json({ success: true, id: result });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ success: false, message: "Server error" });
+    console.error("Survey insert failed:", err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error", error: err.message });
   }
 }
