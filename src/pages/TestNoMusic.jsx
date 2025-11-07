@@ -122,7 +122,6 @@ export const TestNoMusic = ({ studentEmail }) => {
       }),
     });
 
-
     const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
     if (completed < 1) {
       localStorage.setItem("completedTests", "1");
@@ -186,8 +185,6 @@ export const TestNoMusic = ({ studentEmail }) => {
             </div>
           </div>
         )}
-
-
 
         {/* Math Stage */}
         {stage === "math" && (

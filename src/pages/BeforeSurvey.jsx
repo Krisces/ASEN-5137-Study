@@ -1,4 +1,3 @@
-// BeforeSurvey.jsx
 import { useState, useEffect } from "react";
 import { StarBackground } from "../components/StarBackground";
 import { useNavigate } from "react-router-dom";
@@ -98,6 +97,8 @@ export const BeforeSurvey = () => {
 
       if (data.success) {
         if (!emailIsException) setCookie("completedStudy", email, 30);
+        // store email in localStorage for tests
+        localStorage.setItem("studentEmail", email);
         navigate("/demo");
       } else {
         alert("Error saving your survey. Try again.");

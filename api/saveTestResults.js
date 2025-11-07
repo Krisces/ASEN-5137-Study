@@ -3,41 +3,30 @@ import { TestResults } from "../backend/schema.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    console.error("Invalid method:", req.method);
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
-  // Log the incoming request body for debugging
-  console.log("Incoming request body:", req.body);
-
-  const { studentEmail, testName, results } = req.body;
-
-  // Validate fields
-  if (!studentEmail || !testName || !results || !Array.isArray(results)) {
-    console.error("Bad request: missing or invalid fields");
-    return res.status(400).json({ error: "Missing or invalid fields" });
-  }
-
   try {
-    // Map results to DB format
-    const mappedResults = results.map((r) => ({
-      studentEmail,
-      testName,
-      questionType: r.questionType,
-      questionId: r.questionId,
-      isCorrect: r.isCorrect,
-      totalTimeMs: r.totalTimeMs ?? null, // ensure numeric or null
-    }));
+    const { studentEmail, testName, results } = req.body;
 
-    console.log("Mapped results to insert:", mappedResults);
+    if (!studentEmail || !testName || !results) {
+      return res.status(400).json({ error: "Missing fields" });
+    }
 
-    // Insert into database
-    const insertedRows = await db.insert(TestResults).values(mappedResults).returning();
-    console.log("Inserted test results:", insertedRows);
+    await db.insert(TestResults).values(
+      results.map((r) => ({
+        studentEmail: studentEmail.toLowerCase(),
+        testName,
+        questionType: r.questionType,
+        questionId: r.questionId,
+        isCorrect: r.isCorrect,
+        totalTimeMs: r.totalTimeMs ?? null,
+      }))
+    );
 
-    return res.status(200).json({ success: true, insertedRows });
+    res.status(200).json({ success: true });
   } catch (err) {
-    console.error("Database insert failed:", err);
-    return res.status(500).json({ error: "Database error", message: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
   }
 }

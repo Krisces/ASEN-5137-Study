@@ -10,7 +10,6 @@ export default async function handler(req, res) {
 
     if (!studentEmail) return res.status(400).json({ message: "Email required" });
 
-    // convert optional fields to proper values or null
     const ageVal = age !== undefined && age !== "" ? Number(age) : null;
     const dailyMusicHoursVal = dailyMusicHours !== undefined && dailyMusicHours !== "" ? Number(dailyMusicHours) : null;
 
@@ -21,7 +20,7 @@ export default async function handler(req, res) {
       favoriteMusic: favoriteMusic || null,
       dailyMusicHours: dailyMusicHoursVal,
       isException: isException ? 1 : 0,
-    }).returning(); // <- this lets you see the inserted row
+    }).returning();
 
     console.log("Survey inserted:", result);
 
