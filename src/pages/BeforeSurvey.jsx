@@ -1,4 +1,4 @@
-// BeforeSurvey.js
+// BeforeSurvey.jsx
 import { useState, useEffect } from "react";
 import { StarBackground } from "../components/StarBackground";
 import { useNavigate } from "react-router-dom";
@@ -37,12 +37,10 @@ export const BeforeSurvey = () => {
 
   const [consentGiven, setConsentGiven] = useState(false);
 
-  const emailIsException = EXCEPTION_EMAILS.includes(formData.studentEmail.trim().toLowerCase());
-
   // Check cookie and prevent re-taking
   useEffect(() => {
     const completed = getCookie("completedStudy");
-    if (completed) {
+    if (completed && !EXCEPTION_EMAILS.includes(completed)) {
       alert("You’ve already completed this study. Thank you!");
       navigate("/thank-you");
     }
@@ -55,20 +53,15 @@ export const BeforeSurvey = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const email = formData.studentEmail.trim().toLowerCase();
+    const emailIsException = EXCEPTION_EMAILS.includes(email);
+
+    if (!email) {
+      alert("Please enter your email.");
+      return;
+    }
 
     if (!emailIsException && !consentGiven) {
       alert("You must agree to participate before continuing.");
-      return;
-    }
-
-    if (getCookie("completedStudy") && !emailIsException) {
-      alert("This email has already participated in the study.");
-      return;
-    }
-
-    // Validation
-    if (!email) {
-      alert("Please enter your email.");
       return;
     }
 
@@ -86,6 +79,11 @@ export const BeforeSurvey = () => {
 
       if (Number(formData.dailyMusicHours) < 0) {
         alert("Daily music hours cannot be negative.");
+        return;
+      }
+
+      if (getCookie("completedStudy")) {
+        alert("This email has already participated in the study.");
         return;
       }
     }
@@ -145,7 +143,7 @@ export const BeforeSurvey = () => {
         </div>
 
         {/* Only show other fields & consent if NOT an exception */}
-        {!emailIsException && (
+        {!EXCEPTION_EMAILS.includes(formData.studentEmail.trim().toLowerCase()) && (
           <>
             <div>
               <label htmlFor="age" className="block mb-2 font-medium">
@@ -234,9 +232,12 @@ export const BeforeSurvey = () => {
 
         <button
           type="submit"
-          disabled={!emailIsException && !consentGiven}
+          disabled={
+            !EXCEPTION_EMAILS.includes(formData.studentEmail.trim().toLowerCase()) &&
+            !consentGiven
+          }
           className={`w-full py-3 rounded-md font-semibold transition-colors ${
-            emailIsException || consentGiven
+            EXCEPTION_EMAILS.includes(formData.studentEmail.trim().toLowerCase()) || consentGiven
               ? "bg-blue-600 hover:bg-blue-700 text-white"
               : "bg-gray-600 text-gray-300 cursor-not-allowed"
           }`}
