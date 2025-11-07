@@ -52,19 +52,27 @@ export const StudyHome = () => {
                                 key={test.id}
                                 className={`bg-gray-800/80 p-6 rounded-lg shadow-lg flex flex-col justify-between h-full
                                     ${isUnlocked ? "hover:bg-blue-700 cursor-pointer" : "opacity-50 cursor-not-allowed"}`}
-                                onClick={() => handleStartTest(test.id)}
                             >
                                 <div>
                                     <h2 className="text-2xl font-bold mb-2">{test.title}</h2>
                                     <p className="text-gray-300">{test.context}</p>
                                 </div>
-                                {isUnlocked && (
+                                {isUnlocked ? (
                                     <button
+                                        onClick={() => handleStartTest(test.id)}
                                         className="mt-4 bg-blue-600 px-4 py-2 rounded hover:bg-blue-950 w-full"
                                     >
                                         Start
                                     </button>
+                                ) : (
+                                    <button
+                                        disabled
+                                        className="mt-4 bg-gray-500 px-4 py-2 rounded w-full cursor-not-allowed"
+                                    >
+                                        Locked
+                                    </button>
                                 )}
+
                                 {!isUnlocked && (
                                     <p className="mt-4 text-gray-500 text-center">Locked</p>
                                 )}
