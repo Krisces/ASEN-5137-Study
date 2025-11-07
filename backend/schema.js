@@ -6,12 +6,12 @@ import { pgTable, serial, varchar, integer, numeric, boolean, timestamp } from "
 export const SurveySubmissions = pgTable("survey_submissions", {
   id: serial("id").primaryKey(),
   studentEmail: varchar("student_email", { length: 255 }).notNull(),
-  age: integer("age"),
-  gender: varchar("gender", { length: 50 }),
-  favoriteMusic: varchar("favorite_music", { length: 100 }),
-  dailyMusicHours: numeric("daily_music_hours", { precision: 4, scale: 2 }),
-  isException: integer("is_exception").notNull(), // 1 if exception
-  createdAt: varchar("created_at", { length: 50 }).default(() => new Date().toISOString())
+  age: integer("age").default(null),
+  gender: varchar("gender", { length: 50 }).default(null),
+  favoriteMusic: varchar("favorite_music", { length: 100 }).default(null),
+  dailyMusicHours: numeric("daily_music_hours", { precision: 4, scale: 2 }).default(null),
+  isException: integer("is_exception").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // ==============================
