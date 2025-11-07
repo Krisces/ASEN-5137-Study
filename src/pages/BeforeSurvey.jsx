@@ -91,6 +91,11 @@ export const BeforeSurvey = () => {
     }
 
     try {
+      // reset progress
+      localStorage.removeItem("completedTests");
+      localStorage.setItem("completedTests", "0");
+      localStorage.removeItem("studentEmail");
+
       const res = await fetch("/api/survey", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -100,7 +105,6 @@ export const BeforeSurvey = () => {
 
       if (data.success) {
         if (!emailIsException) setCookie("completedStudy", email, 30);
-        // store email in localStorage for tests
         localStorage.setItem("studentEmail", email);
         navigate("/demo");
       } else {
@@ -110,6 +114,7 @@ export const BeforeSurvey = () => {
       console.error(err);
       alert("Server error. Try again later.");
     }
+
   };
 
   return (
@@ -240,11 +245,10 @@ export const BeforeSurvey = () => {
             !EXCEPTION_EMAILS.includes(formData.studentEmail.trim().toLowerCase()) &&
             !consentGiven
           }
-          className={`w-full py-3 rounded-md font-semibold transition-colors ${
-            EXCEPTION_EMAILS.includes(formData.studentEmail.trim().toLowerCase()) || consentGiven
+          className={`w-full py-3 rounded-md font-semibold transition-colors ${EXCEPTION_EMAILS.includes(formData.studentEmail.trim().toLowerCase()) || consentGiven
               ? "bg-blue-600 hover:bg-blue-700 text-white"
               : "bg-gray-600 text-gray-300 cursor-not-allowed"
-          }`}
+            }`}
         >
           Familiarize Yourself With the Tests
         </button>
