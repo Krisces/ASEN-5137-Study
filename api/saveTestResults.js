@@ -22,9 +22,10 @@ export default async function handler(req, res) {
       questionId: r.questionId,
       status: r.status || "no_time",
       totalTimeMs: Number(r.totalTimeMs ?? null),
-      readingTimeMs: Number(r.readingTimeMs ?? null),
-      mathTimeMs: Number(r.mathTimeMs ?? null),
+      readingTimeMs: r.questionType === "reading" ? Number(r.readingTimeMs ?? null) : null,
+      mathTimeMs: r.questionType === "math" ? Number(r.mathTimeMs ?? null) : null,
     }));
+
 
     console.log("Inserting results:", formattedResults);
 
