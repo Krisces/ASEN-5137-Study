@@ -159,10 +159,10 @@ export const TestNoMusic = ({ studentEmail }) => {
             <p className="text-center">Read the paragraph below carefully. You will answer questions afterward.</p>
             <p className="bg-gray-700/60 p-4 rounded text-left mt-2 mb-2">{paragraph}</p>
             <div className="text-center">
+              {/* Proceed to Questions is always clickable */}
               <button
                 onClick={() => setStage("questions")}
-                className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-                disabled={readingQuestions.some(q => !readingAnswers[q.id])}
+                className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700"
               >
                 Proceed to Questions
               </button>
