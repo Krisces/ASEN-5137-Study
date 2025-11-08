@@ -20,8 +20,10 @@ export default async function handler(req, res) {
         testName,
         questionType: r.questionType,
         questionId: r.questionId,
-        status: r.status || "no_time", // updated field
+        status: r.status || "no_time",
         totalTimeMs: r.totalTimeMs ?? null,
+        readingTimeMs: r.readingTimeMs ?? null,
+        mathTimeMs: r.mathTimeMs ?? null,
       }))
     );
 

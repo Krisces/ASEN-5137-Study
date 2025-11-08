@@ -29,6 +29,13 @@
       "when": 1762561011509,
       "tag": "0003_busy_lucky_pierre",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1762565039323,
+      "tag": "0004_next_skullbuster",
+      "breakpoints": true
     }
   ]
 }
