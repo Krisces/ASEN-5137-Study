@@ -8,13 +8,11 @@ export const TestNoMusic = ({ studentEmail }) => {
   const [readingAnswers, setReadingAnswers] = useState({});
   const [currentMathIndex, setCurrentMathIndex] = useState(0);
   const [mathAnswers, setMathAnswers] = useState([]);
-  const [readingTime, setReadingTime] = useState(null);
-
-  const startTimeRef = useRef(Date.now());
-  const readingStartTimeRef = useRef(Date.now());
-  const mathStartTimeRef = useRef(null);
+  const startTimeRef = useRef(null);
+  const readingStartTimeRef = useRef(null);
+  const readingTimeRef = useRef(null);
+  const mathQuestionStartTimeRef = useRef(null);
   const timerRef = useRef(null);
-  const mathTimerRef = useRef(null);
 
   const MAX_TIME_MS = 3 * 60 * 1000; // 3 minutes overall
   const MATH_TIME_MS = 1 * 60 * 1000; // 1 minute for math section
@@ -47,7 +45,7 @@ export const TestNoMusic = ({ studentEmail }) => {
   // ---- Timers ----
   useEffect(() => {
     startTimeRef.current = Date.now();
-    readingStartTimeRef.current = Date.now();
+    readingStartTimeRef.current = Date.now(); // start reading immediately
 
     timerRef.current = setInterval(() => {
       const elapsed = Date.now() - startTimeRef.current;
@@ -56,22 +54,54 @@ export const TestNoMusic = ({ studentEmail }) => {
 
     return () => {
       clearInterval(timerRef.current);
-      clearInterval(mathTimerRef.current);
     };
   }, []);
 
-  useEffect(() => {
-    if (stage === "math") {
-      mathStartTimeRef.current = Date.now(); // start first math problem
-      const mathSectionStartTime = Date.now();
-      mathTimerRef.current = setInterval(() => {
-        const elapsed = Date.now() - mathSectionStartTime;
-        if (elapsed >= MATH_TIME_MS) setStage("closing");
-      }, 500);
-    } else {
-      clearInterval(mathTimerRef.current);
+  // ---- Handlers ----
+  const handleQuestionChange = (id, value) =>
+    setReadingAnswers({ ...readingAnswers, [id]: value });
+
+  const handleProceedToMath = () => {
+    // stop reading timer when proceeding to math
+    readingTimeRef.current = Date.now() - readingStartTimeRef.current;
+    setStage("math");
+    mathQuestionStartTimeRef.current = Date.now(); // start math per-question timing
+  };
+
+  const handleMathAnswer = (e) => {
+    if (e.key === "Enter") {
+      const value = e.target.value.trim();
+
+      if (value === "") {
+        alert("Please enter a number before proceeding.");
+        return;
+      }
+
+      const numericValue = Number(value);
+
+      if (isNaN(numericValue)) {
+        alert("Please enter a valid number.");
+        return;
+      }
+
+      const problem = mathProblems[currentMathIndex];
+      const answerTime = Date.now() - mathQuestionStartTimeRef.current;
+
+      setMathAnswers([
+        ...mathAnswers,
+        { ...problem, answer: numericValue, timeMs: answerTime },
+      ]);
+
+      e.target.value = "";
+      mathQuestionStartTimeRef.current = Date.now(); // reset for next math question
+
+      if (currentMathIndex + 1 < mathProblems.length) {
+        setCurrentMathIndex(currentMathIndex + 1);
+      } else {
+        setStage("closing");
+      }
     }
-  }, [stage]);
+  };
 
   // ---- Save results ----
   useEffect(() => {
@@ -81,7 +111,9 @@ export const TestNoMusic = ({ studentEmail }) => {
         if (!email) return;
 
         const totalTimeMs = Math.min(Date.now() - startTimeRef.current, MAX_TIME_MS);
+        const readingTimeMs = readingTimeRef.current || 0;
 
+        // Reading results
         const readingResults = readingQuestions.map((q) => ({
           studentEmail: email.toLowerCase(),
           testName: "NoMusic",
@@ -93,17 +125,18 @@ export const TestNoMusic = ({ studentEmail }) => {
               : "wrong"
             : "no_time",
           totalTimeMs,
-          readingTimeMs, // total reading time for all questions
+          readingTimeMs, // same for all reading questions
         }));
 
-        const mathResults = mathAnswers.map((ans) => ({
+        // Math results
+        const mathResults = mathAnswers.map((m, i) => ({
           studentEmail: email.toLowerCase(),
           testName: "NoMusic",
           questionType: "math",
-          questionId: ans.id,
-          status: ans.answer === ans.a * ans.b ? "right" : "wrong",
+          questionId: m.id,
+          status: m.answer === m.a * m.b ? "right" : "wrong",
           totalTimeMs,
-          mathTimeMs: ans.mathTimeMs,
+          mathTimeMs: m.timeMs,
         }));
 
         const allResults = [...readingResults, ...mathResults];
@@ -125,7 +158,7 @@ export const TestNoMusic = ({ studentEmail }) => {
         }
 
         // ---- Unlock next test ----
-        const currentTestId = 1; // set this to the ID of this test
+        const currentTestId = 1;
         const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
         if (completed < currentTestId) {
           localStorage.setItem("completedTests", currentTestId.toString());
@@ -135,50 +168,6 @@ export const TestNoMusic = ({ studentEmail }) => {
       saveResults();
     }
   }, [stage]);
-
-  // ---- Handlers ----
-  const handleQuestionChange = (id, value) =>
-    setReadingAnswers({ ...readingAnswers, [id]: value });
-
-  const handleProceedToMath = () => {
-    const readingTimeMs = Date.now() - readingStartTimeRef.current;
-    setReadingTime(readingTimeMs);
-    setStage("math");
-    mathStartTimeRef.current = Date.now(); // start first math problem
-  };
-
-  const handleMathAnswer = (e) => {
-    if (e.key === "Enter") {
-      const value = e.target.value.trim();
-      if (value === "") {
-        alert("Please enter a number before proceeding.");
-        return;
-      }
-
-      const numericValue = Number(value);
-      if (isNaN(numericValue)) {
-        alert("Please enter a valid number.");
-        return;
-      }
-
-      const problem = mathProblems[currentMathIndex];
-      const mathTimeMs = Date.now() - mathStartTimeRef.current;
-
-      setMathAnswers([
-        ...mathAnswers,
-        { ...problem, answer: numericValue, mathTimeMs }
-      ]);
-
-      e.target.value = "";
-
-      if (currentMathIndex + 1 < mathProblems.length) {
-        setCurrentMathIndex(currentMathIndex + 1);
-        mathStartTimeRef.current = Date.now(); // start next question
-      } else {
-        setStage("closing");
-      }
-    }
-  };
 
   // ---- Render ----
   return (
@@ -194,7 +183,7 @@ export const TestNoMusic = ({ studentEmail }) => {
             <p className="bg-gray-700/60 p-4 rounded text-left mt-2 mb-2">{paragraph}</p>
             <div className="text-center">
               <button
-                onClick={handleProceedToMath}
+                onClick={() => setStage("questions")}
                 className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700"
               >
                 Proceed to Questions
