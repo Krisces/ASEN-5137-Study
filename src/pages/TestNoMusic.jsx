@@ -135,8 +135,11 @@ export const TestNoMusic = ({ studentEmail }) => {
 
   const handleMathAnswer = (e) => {
     if (e.key === "Enter") {
+      const value = e.target.value.trim();
+      if (!value) return; // ignore empty input
+
       const problem = mathProblems[currentMathIndex];
-      setMathAnswers([...mathAnswers, { ...problem, answer: Number(e.target.value) }]);
+      setMathAnswers([...mathAnswers, { ...problem, answer: Number(value) }]);
       e.target.value = "";
       if (currentMathIndex + 1 < mathProblems.length) {
         setCurrentMathIndex(currentMathIndex + 1);
@@ -145,6 +148,7 @@ export const TestNoMusic = ({ studentEmail }) => {
       }
     }
   };
+
 
   // ---- Render ----
   return (
