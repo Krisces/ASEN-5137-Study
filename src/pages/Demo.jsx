@@ -125,8 +125,8 @@ Hummingbirds have excellent memories and can recall which flowers they have visi
                                 onClick={handleAudioConfirm}
                                 disabled={!audioPlaying}
                                 className={`px-4 py-2 rounded ${audioPlaying
-                                        ? "bg-green-600 hover:bg-green-700"
-                                        : "bg-gray-600 cursor-not-allowed"
+                                    ? "bg-green-600 hover:bg-green-700"
+                                    : "bg-gray-600 cursor-not-allowed"
                                     }`}
                             >
                                 I can hear it
@@ -140,8 +140,9 @@ Hummingbirds have excellent memories and can recall which flowers they have visi
                     <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4">
                         <h1 className="text-3xl font-bold text-center">Reading Comprehension</h1>
                         <p className="text-center">
-                            You will be given a paragraph to read. After your reading is complete, 
-                            you will be asked questions about its content. Make sure you read carefully.
+                            You will be given a paragraph to read. During the test, after your reading is complete,
+                            you will be asked questions about the paragraph and its content.
+                            Make sure you read and understand it properly to answer the questions afterwards.
                         </p>
                         <p className="bg-gray-700/60 p-4 rounded text-left mt-2 mb-2">{readingParagraph}</p>
                         <div className="text-center">
@@ -195,10 +196,11 @@ Hummingbirds have excellent memories and can recall which flowers they have visi
                         <h1 className="text-3xl font-bold mb-2">Math Test Instructions</h1>
                         <p>
                             You will be given multiplication problems from 1×1 up to 13×13. 
-                            You must enter a value for each problem. Press Enter only after entering a number.
+                            You will have **1 minute** to answer as many problems as possible. 
+                            There are 42–43 problems in total, so it’s okay if you can’t answer all within the time limit — it is designed this way.
                         </p>
                         <p>
-                            You will have **1 minute** to answer as many problems as possible. 
+                            After the timer is over, you will automatically proceed to the next page to continue with the other tests or the after-survey.
                         </p>
                         <button
                             onClick={handleStartMathTest}
