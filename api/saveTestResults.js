@@ -13,20 +13,21 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing fields" });
     }
 
+    // Insert all results into the database
     await db.insert(TestResults).values(
       results.map((r) => ({
         studentEmail: studentEmail.toLowerCase(),
         testName,
         questionType: r.questionType,
         questionId: r.questionId,
-        isCorrect: r.isCorrect,
+        status: r.status || "no_time", // updated field
         totalTimeMs: r.totalTimeMs ?? null,
       }))
     );
 
     res.status(200).json({ success: true });
   } catch (err) {
-    console.error(err);
+    console.error("Error saving test results:", err);
     res.status(500).json({ error: "Database error" });
   }
 }

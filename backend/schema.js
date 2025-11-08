@@ -23,7 +23,9 @@ export const TestResults = pgTable("test_results", {
   testName: varchar("test_name", { length: 100 }).notNull(),
   questionType: varchar("question_type", { length: 50 }).notNull(),
   questionId: integer("question_id").notNull(),
-  isCorrect: boolean("is_correct").notNull(),
-  totalTimeMs: numeric("total_time_ms"),       // total time for the test
+  status: varchar("status", { length: 10 }).notNull(), // right, wrong, no_time
+  totalTimeMs: numeric("total_time_ms"),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+

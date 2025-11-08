@@ -11,6 +11,7 @@ export const TestNoMusic = ({ studentEmail }) => {
   const startTimeRef = useRef(null);
   const timerRef = useRef(null);
   const mathTimerRef = useRef(null);
+
   const MAX_TIME_MS = 3 * 60 * 1000; // 3 minutes overall
   const MATH_TIME_MS = 1 * 60 * 1000; // 1 minute for math section
 
@@ -65,7 +66,7 @@ export const TestNoMusic = ({ studentEmail }) => {
     }
   }, [stage]);
 
-  // ---- Save results when stage becomes "closing" ----
+  // ---- Save results ----
   useEffect(() => {
     if (stage === "closing") {
       const saveResults = async () => {
@@ -74,23 +75,36 @@ export const TestNoMusic = ({ studentEmail }) => {
 
         const totalTimeMs = Math.min(Date.now() - startTimeRef.current, MAX_TIME_MS);
 
-        const readingResults = readingQuestions.map(q => ({
+        // Reading results
+        const readingResults = readingQuestions.map((q) => ({
           studentEmail: email.toLowerCase(),
           testName: "NoMusic",
           questionType: "reading",
           questionId: q.id,
-          isCorrect: readingAnswers[q.id] === q.options[0],
-          totalTimeMs
+          status: readingAnswers[q.id]
+            ? readingAnswers[q.id] === q.options[0]
+              ? "right"
+              : "wrong"
+            : "no_time",
+          totalTimeMs,
         }));
 
-        const mathResults = mathAnswers.map(a => ({
-          studentEmail: email.toLowerCase(),
-          testName: "NoMusic",
-          questionType: "math",
-          questionId: a.id,
-          isCorrect: a.answer === a.a * a.b,
-          totalTimeMs
-        }));
+        // Math results
+        const mathResults = mathProblems.map((p, i) => {
+          const answerObj = mathAnswers[i];
+          return {
+            studentEmail: email.toLowerCase(),
+            testName: "NoMusic",
+            questionType: "math",
+            questionId: p.id,
+            status: answerObj
+              ? answerObj.answer === p.a * p.b
+                ? "right"
+                : "wrong"
+              : "no_time",
+            totalTimeMs,
+          };
+        });
 
         const allResults = [...readingResults, ...mathResults];
 
@@ -101,19 +115,11 @@ export const TestNoMusic = ({ studentEmail }) => {
             body: JSON.stringify({
               studentEmail: email,
               testName: "NoMusic",
-              results: allResults.length ? allResults : [],
+              results: allResults,
             }),
           });
-
           const data = await res.json();
           if (!data.success) console.error("Error saving test results:", data);
-
-          // Update completed tests counter
-          const currentTestId = 1;
-          const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
-          if (completed < currentTestId) {
-            localStorage.setItem("completedTests", currentTestId.toString());
-          }
         } catch (err) {
           console.error("Server error saving test results:", err);
         }
@@ -155,7 +161,8 @@ export const TestNoMusic = ({ studentEmail }) => {
             <div className="text-center">
               <button
                 onClick={() => setStage("questions")}
-                className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700"
+                className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+                disabled={readingQuestions.some(q => !readingAnswers[q.id])}
               >
                 Proceed to Questions
               </button>
@@ -189,7 +196,8 @@ export const TestNoMusic = ({ studentEmail }) => {
             <div className="text-center">
               <button
                 onClick={() => setStage("math")}
-                className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700"
+                className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+                disabled={readingQuestions.some(q => !readingAnswers[q.id])}
               >
                 Proceed to Math
               </button>
@@ -201,7 +209,7 @@ export const TestNoMusic = ({ studentEmail }) => {
         {stage === "math" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
             <h1 className="text-3xl font-bold mb-2">Math Problems</h1>
-            <p>Answer as many as you can. Press Enter after each answer.</p>
+            <p>Answer each question. Press Enter after each answer. You cannot skip.</p>
             <p className="mt-2">
               Problem {currentMathIndex + 1} of {mathProblems.length}:{" "}
               {mathProblems[currentMathIndex].a} × {mathProblems[currentMathIndex].b} =
@@ -211,6 +219,7 @@ export const TestNoMusic = ({ studentEmail }) => {
               className="bg-gray-700/60 border border-gray-600 px-2 py-1 rounded w-full"
               onKeyDown={handleMathAnswer}
               placeholder="Type answer and press Enter"
+              autoFocus
             />
           </div>
         )}
