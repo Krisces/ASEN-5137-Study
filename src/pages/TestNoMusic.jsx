@@ -14,10 +14,9 @@ export const TestNoMusic = ({ studentEmail }) => {
   const mathQuestionStartTimeRef = useRef(null);
   const timerRef = useRef(null);
 
-  const MAX_TIME_MS = 3 * 60 * 1000; // 3 minutes overall
+  const MAX_TIME_MS = 3 * 60 * 1000; // 3 minutes total
   const MATH_TIME_MS = 1 * 60 * 1000; // 1 minute for math section
 
-  // Fixed Set 1 ("NoMusic") – 43 problems
   const mathProblems = [
     { id: 1, a: 1, b: 1 }, { id: 2, a: 1, b: 10 }, { id: 3, a: 2, b: 3 }, { id: 4, a: 2, b: 12 },
     { id: 5, a: 3, b: 4 }, { id: 6, a: 3, b: 13 }, { id: 7, a: 4, b: 6 }, { id: 8, a: 4, b: 11 },
@@ -57,30 +56,32 @@ export const TestNoMusic = ({ studentEmail }) => {
     };
   }, []);
 
+  // ---- 1-minute math limit ----
+  useEffect(() => {
+    let mathTimer = null;
+    if (stage === "math") {
+      mathTimer = setTimeout(() => setStage("closing"), MATH_TIME_MS);
+      mathQuestionStartTimeRef.current = Date.now();
+    }
+    return () => {
+      if (mathTimer) clearTimeout(mathTimer);
+    };
+  }, [stage]);
+
   // ---- Handlers ----
   const handleQuestionChange = (id, value) =>
     setReadingAnswers({ ...readingAnswers, [id]: value });
 
   const handleProceedToMath = () => {
-    // stop reading timer when proceeding to math
     readingTimeRef.current = Date.now() - readingStartTimeRef.current;
     setStage("math");
-    mathQuestionStartTimeRef.current = Date.now(); // start math per-question timing
   };
 
   const handleMathAnswer = (e) => {
     if (e.key === "Enter") {
       const value = e.target.value.trim();
-
-      if (value === "") {
-        alert("Please enter a number before proceeding.");
-        return;
-      }
-
-      const numericValue = Number(value);
-
-      if (isNaN(numericValue)) {
-        alert("Please enter a valid number.");
+      if (value === "" || isNaN(Number(value))) {
+        alert("Please enter a valid number before proceeding.");
         return;
       }
 
@@ -89,11 +90,11 @@ export const TestNoMusic = ({ studentEmail }) => {
 
       setMathAnswers([
         ...mathAnswers,
-        { ...problem, answer: numericValue, timeMs: answerTime },
+        { ...problem, answer: Number(value), timeMs: answerTime },
       ]);
 
       e.target.value = "";
-      mathQuestionStartTimeRef.current = Date.now(); // reset for next math question
+      mathQuestionStartTimeRef.current = Date.now();
 
       if (currentMathIndex + 1 < mathProblems.length) {
         setCurrentMathIndex(currentMathIndex + 1);
@@ -113,23 +114,19 @@ export const TestNoMusic = ({ studentEmail }) => {
         const totalTimeMs = Math.min(Date.now() - startTimeRef.current, MAX_TIME_MS);
         const readingTimeMs = readingTimeRef.current || 0;
 
-        // Reading results
         const readingResults = readingQuestions.map((q) => ({
           studentEmail: email.toLowerCase(),
           testName: "NoMusic",
           questionType: "reading",
           questionId: q.id,
           status: readingAnswers[q.id]
-            ? readingAnswers[q.id] === q.options[0]
-              ? "right"
-              : "wrong"
+            ? readingAnswers[q.id] === q.options[0] ? "right" : "wrong"
             : "no_time",
           totalTimeMs,
-          readingTimeMs, // same for all reading questions
+          readingTimeMs,
         }));
 
-        // Math results
-        const mathResults = mathAnswers.map((m, i) => ({
+        const mathResults = mathAnswers.map((m) => ({
           studentEmail: email.toLowerCase(),
           testName: "NoMusic",
           questionType: "math",
@@ -157,7 +154,6 @@ export const TestNoMusic = ({ studentEmail }) => {
           console.error("Server error saving test results:", err);
         }
 
-        // ---- Unlock next test ----
         const currentTestId = 1;
         const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
         if (completed < currentTestId) {
@@ -175,7 +171,6 @@ export const TestNoMusic = ({ studentEmail }) => {
       <StarBackground />
       <div className="relative z-10 w-full max-w-3xl space-y-8">
 
-        {/* Reading Stage */}
         {stage === "reading" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4">
             <h1 className="text-3xl font-bold text-center">Reading Comprehension</h1>
@@ -192,7 +187,6 @@ export const TestNoMusic = ({ studentEmail }) => {
           </div>
         )}
 
-        {/* Questions Stage */}
         {stage === "questions" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-6 text-center">
             <h1 className="text-3xl font-bold mb-4">Reading Questions</h1>
@@ -227,7 +221,6 @@ export const TestNoMusic = ({ studentEmail }) => {
           </div>
         )}
 
-        {/* Math Stage */}
         {stage === "math" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
             <h1 className="text-3xl font-bold mb-2">Math Problems</h1>
@@ -246,7 +239,6 @@ export const TestNoMusic = ({ studentEmail }) => {
           </div>
         )}
 
-        {/* Closing Stage */}
         {stage === "closing" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
             <h1 className="text-3xl font-bold">Test Complete</h1>

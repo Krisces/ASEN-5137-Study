@@ -9,13 +9,17 @@ export const TestRock = ({ studentEmail }) => {
   const [currentMathIndex, setCurrentMathIndex] = useState(0);
   const [mathAnswers, setMathAnswers] = useState([]);
   const startTimeRef = useRef(null);
+  const readingStartTimeRef = useRef(null);
+  const readingTimeRef = useRef(null);
+  const mathQuestionStartTimeRef = useRef(null);
   const timerRef = useRef(null);
   const mathTimerRef = useRef(null);
-  const audioRef = useRef(new Audio("/audio/highwaytohell.mp3"));
+  const audioRef = useRef(new Audio("/audio/highwaytohell.mp3")); // unique to TestRock
 
-  const MAX_TIME_MS = 3 * 60 * 1000; // 3 minutes overall
-  const MATH_TIME_MS = 1 * 60 * 1000; // 1 minute for math section
+  const MAX_TIME_MS = 3 * 60 * 1000; // 3 minutes total
+  const MATH_TIME_MS = 1 * 60 * 1000; // 1 minute math
 
+  // ---- Unique to TestRock ----
   const paragraph = `Rock music from the 70s and 80s has shaped popular culture and influenced generations of musicians. Bands like Queen, Led Zeppelin, and The Rolling Stones created iconic songs that remain popular today. Rock music often features strong guitar riffs, memorable melodies, and energetic rhythms. Listening to rock music can energize listeners and evoke feelings of excitement and nostalgia.`;
 
   const readingQuestions = [
@@ -40,9 +44,10 @@ export const TestRock = ({ studentEmail }) => {
     { id: 41, a: 9, b: 4 }, { id: 42, a: 12, b: 12 }, { id: 43, a: 13, b: 2 },
   ];
 
-  // ---- Timers & Music ----
+  // ---- TIMERS & AUDIO ----
   useEffect(() => {
     startTimeRef.current = Date.now();
+    readingStartTimeRef.current = Date.now();
     const audio = audioRef.current;
     audio.loop = true;
     audio.play().catch(() => console.log("Autoplay blocked"));
@@ -54,7 +59,7 @@ export const TestRock = ({ studentEmail }) => {
 
     return () => {
       clearInterval(timerRef.current);
-      clearInterval(mathTimerRef.current);
+      clearTimeout(mathTimerRef.current);
       audio.pause();
       audio.currentTime = 0;
     };
@@ -62,15 +67,48 @@ export const TestRock = ({ studentEmail }) => {
 
   useEffect(() => {
     if (stage === "math") {
-      const mathStartTime = Date.now();
-      mathTimerRef.current = setInterval(() => {
-        const elapsed = Date.now() - mathStartTime;
-        if (elapsed >= MATH_TIME_MS) setStage("closing");
-      }, 500);
+      mathQuestionStartTimeRef.current = Date.now();
+      mathTimerRef.current = setTimeout(() => setStage("closing"), MATH_TIME_MS);
     } else {
-      clearInterval(mathTimerRef.current);
+      clearTimeout(mathTimerRef.current);
     }
   }, [stage]);
+
+  // ---- Handlers ----
+  const handleQuestionChange = (id, value) =>
+    setReadingAnswers({ ...readingAnswers, [id]: value });
+
+  const handleProceedToMath = () => {
+    readingTimeRef.current = Date.now() - readingStartTimeRef.current;
+    setStage("math");
+  };
+
+  const handleMathAnswer = (e) => {
+    if (e.key === "Enter") {
+      const value = e.target.value.trim();
+      if (value === "" || isNaN(Number(value))) {
+        alert("Please enter a valid number before proceeding.");
+        return;
+      }
+
+      const problem = mathProblems[currentMathIndex];
+      const answerTime = Date.now() - mathQuestionStartTimeRef.current;
+
+      setMathAnswers([
+        ...mathAnswers,
+        { ...problem, answer: Number(value), timeMs: answerTime },
+      ]);
+
+      e.target.value = "";
+      mathQuestionStartTimeRef.current = Date.now();
+
+      if (currentMathIndex + 1 < mathProblems.length) {
+        setCurrentMathIndex(currentMathIndex + 1);
+      } else {
+        setStage("closing");
+      }
+    }
+  };
 
   // ---- Save results ----
   useEffect(() => {
@@ -80,6 +118,7 @@ export const TestRock = ({ studentEmail }) => {
         if (!email) return;
 
         const totalTimeMs = Math.min(Date.now() - startTimeRef.current, MAX_TIME_MS);
+        const readingTimeMs = readingTimeRef.current || 0;
 
         const readingResults = readingQuestions.map((q) => ({
           studentEmail: email.toLowerCase(),
@@ -87,28 +126,21 @@ export const TestRock = ({ studentEmail }) => {
           questionType: "reading",
           questionId: q.id,
           status: readingAnswers[q.id]
-            ? readingAnswers[q.id] === q.options[0]
-              ? "right"
-              : "wrong"
+            ? readingAnswers[q.id] === q.options[0] ? "right" : "wrong"
             : "no_time",
           totalTimeMs,
+          readingTimeMs,
         }));
 
-        const mathResults = mathProblems.map((p, i) => {
-          const answerObj = mathAnswers[i];
-          return {
-            studentEmail: email.toLowerCase(),
-            testName: "Rock",
-            questionType: "math",
-            questionId: p.id,
-            status: answerObj
-              ? answerObj.answer === p.a * p.b
-                ? "right"
-                : "wrong"
-              : "no_time",
-            totalTimeMs,
-          };
-        });
+        const mathResults = mathAnswers.map((m) => ({
+          studentEmail: email.toLowerCase(),
+          testName: "Rock",
+          questionType: "math",
+          questionId: m.id,
+          status: m.answer === m.a * m.b ? "right" : "wrong",
+          totalTimeMs,
+          mathTimeMs: m.timeMs,
+        }));
 
         const allResults = [...readingResults, ...mathResults];
 
@@ -128,8 +160,7 @@ export const TestRock = ({ studentEmail }) => {
           console.error("Server error saving test results:", err);
         }
 
-        // ---- Unlock next test ----
-        const currentTestId = 3; // set this to the ID of this test
+        const currentTestId = 1;
         const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
         if (completed < currentTestId) {
           localStorage.setItem("completedTests", currentTestId.toString());
@@ -140,34 +171,6 @@ export const TestRock = ({ studentEmail }) => {
     }
   }, [stage]);
 
-  // ---- Handlers ----
-  const handleQuestionChange = (id, value) =>
-    setReadingAnswers({ ...readingAnswers, [id]: value });
-
-  const handleMathAnswer = (e) => {
-    if (e.key === "Enter") {
-      const value = e.target.value.trim();
-      if (value === "") {
-        alert("Please enter a number before proceeding.");
-        return;
-      }
-      const numericValue = Number(value);
-      if (isNaN(numericValue)) {
-        alert("Please enter a valid number.");
-        return;
-      }
-
-      const problem = mathProblems[currentMathIndex];
-      setMathAnswers([...mathAnswers, { ...problem, answer: numericValue }]);
-      e.target.value = "";
-
-      if (currentMathIndex + 1 < mathProblems.length) {
-        setCurrentMathIndex(currentMathIndex + 1);
-      } else {
-        setStage("closing");
-      }
-    }
-  };
 
   // ---- Render ----
   return (
@@ -175,11 +178,10 @@ export const TestRock = ({ studentEmail }) => {
       <StarBackground />
       <div className="relative z-10 w-full max-w-3xl space-y-8">
 
-        {/* Reading */}
         {stage === "reading" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4">
             <h1 className="text-3xl font-bold text-center">Reading Comprehension</h1>
-            <p className="text-center">Read the paragraph carefully. Questions will follow.</p>
+            <p className="text-center">Read the paragraph below carefully. You will answer questions afterward.</p>
             <p className="bg-gray-700/60 p-4 rounded text-left mt-2 mb-2">{paragraph}</p>
             <div className="text-center">
               <button
@@ -192,7 +194,6 @@ export const TestRock = ({ studentEmail }) => {
           </div>
         )}
 
-        {/* Questions */}
         {stage === "questions" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-6 text-center">
             <h1 className="text-3xl font-bold mb-4">Reading Questions</h1>
@@ -217,7 +218,7 @@ export const TestRock = ({ studentEmail }) => {
             ))}
             <div className="text-center">
               <button
-                onClick={() => setStage("math")}
+                onClick={handleProceedToMath}
                 className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
                 disabled={readingQuestions.some(q => !readingAnswers[q.id])}
               >
@@ -227,11 +228,10 @@ export const TestRock = ({ studentEmail }) => {
           </div>
         )}
 
-        {/* Math */}
         {stage === "math" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
             <h1 className="text-3xl font-bold mb-2">Math Problems</h1>
-            <p>Solve the multiplication problems below. Press Enter after each answer.</p>
+            <p>Answer each question. Press Enter after each answer. You cannot skip.</p>
             <p className="mt-2">
               Problem {currentMathIndex + 1} of {mathProblems.length}:{" "}
               {mathProblems[currentMathIndex].a} × {mathProblems[currentMathIndex].b} =
@@ -246,7 +246,6 @@ export const TestRock = ({ studentEmail }) => {
           </div>
         )}
 
-        {/* Closing */}
         {stage === "closing" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
             <h1 className="text-3xl font-bold">Test Complete</h1>

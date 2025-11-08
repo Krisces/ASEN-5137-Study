@@ -4,17 +4,20 @@ import { useNavigate } from "react-router-dom";
 
 export const TestLofi = ({ studentEmail }) => {
   const navigate = useNavigate();
-  const [stage, setStage] = useState("reading");
+  const [stage, setStage] = useState("reading"); // reading, questions, math, closing
   const [readingAnswers, setReadingAnswers] = useState({});
   const [currentMathIndex, setCurrentMathIndex] = useState(0);
   const [mathAnswers, setMathAnswers] = useState([]);
   const startTimeRef = useRef(null);
+  const readingStartTimeRef = useRef(null);
+  const readingTimeRef = useRef(null);
+  const mathQuestionStartTimeRef = useRef(null);
   const timerRef = useRef(null);
   const mathTimerRef = useRef(null);
   const audioRef = useRef(new Audio("/audio/lofi.mp3"));
 
-  const MAX_TIME_MS = 3 * 60 * 1000;
-  const MATH_TIME_MS = 1 * 60 * 1000;
+  const MAX_TIME_MS = 3 * 60 * 1000; // 3 minutes total
+  const MATH_TIME_MS = 1 * 60 * 1000; // 1 minute for math section
 
   const paragraph = `Lofi beats are characterized by soft, relaxing rhythms often used for studying or relaxation. They feature mellow melodies, light percussion, and a generally calm atmosphere. Many people use lofi music as a background while reading, writing, or focusing on tasks. Listening to lofi can help reduce stress and improve concentration.`;
 
@@ -40,9 +43,10 @@ export const TestLofi = ({ studentEmail }) => {
     { id: 41, a: 9, b: 8 }, { id: 42, a: 12, b: 13 }, { id: 43, a: 13, b: 4 },
   ];
 
-  // ---- Timers & Music ----
+  // ---- TIMERS & AUDIO ----
   useEffect(() => {
     startTimeRef.current = Date.now();
+    readingStartTimeRef.current = Date.now();
     const audio = audioRef.current;
     audio.loop = true;
     audio.play().catch(() => console.log("Autoplay blocked"));
@@ -54,7 +58,7 @@ export const TestLofi = ({ studentEmail }) => {
 
     return () => {
       clearInterval(timerRef.current);
-      clearInterval(mathTimerRef.current);
+      clearTimeout(mathTimerRef.current);
       audio.pause();
       audio.currentTime = 0;
     };
@@ -62,13 +66,48 @@ export const TestLofi = ({ studentEmail }) => {
 
   useEffect(() => {
     if (stage === "math") {
-      const mathStartTime = Date.now();
-      mathTimerRef.current = setInterval(() => {
-        const elapsed = Date.now() - mathStartTime;
-        if (elapsed >= MATH_TIME_MS) setStage("closing");
-      }, 500);
-    } else clearInterval(mathTimerRef.current);
+      mathQuestionStartTimeRef.current = Date.now();
+      mathTimerRef.current = setTimeout(() => setStage("closing"), MATH_TIME_MS);
+    } else {
+      clearTimeout(mathTimerRef.current);
+    }
   }, [stage]);
+
+  // ---- Handlers ----
+  const handleQuestionChange = (id, value) =>
+    setReadingAnswers({ ...readingAnswers, [id]: value });
+
+  const handleProceedToMath = () => {
+    readingTimeRef.current = Date.now() - readingStartTimeRef.current;
+    setStage("math");
+  };
+
+  const handleMathAnswer = (e) => {
+    if (e.key === "Enter") {
+      const value = e.target.value.trim();
+      if (value === "" || isNaN(Number(value))) {
+        alert("Please enter a valid number before proceeding.");
+        return;
+      }
+
+      const problem = mathProblems[currentMathIndex];
+      const answerTime = Date.now() - mathQuestionStartTimeRef.current;
+
+      setMathAnswers([
+        ...mathAnswers,
+        { ...problem, answer: Number(value), timeMs: answerTime },
+      ]);
+
+      e.target.value = "";
+      mathQuestionStartTimeRef.current = Date.now();
+
+      if (currentMathIndex + 1 < mathProblems.length) {
+        setCurrentMathIndex(currentMathIndex + 1);
+      } else {
+        setStage("closing");
+      }
+    }
+  };
 
   // ---- Save results ----
   useEffect(() => {
@@ -78,6 +117,7 @@ export const TestLofi = ({ studentEmail }) => {
         if (!email) return;
 
         const totalTimeMs = Math.min(Date.now() - startTimeRef.current, MAX_TIME_MS);
+        const readingTimeMs = readingTimeRef.current || 0;
 
         const readingResults = readingQuestions.map((q) => ({
           studentEmail: email.toLowerCase(),
@@ -85,28 +125,21 @@ export const TestLofi = ({ studentEmail }) => {
           questionType: "reading",
           questionId: q.id,
           status: readingAnswers[q.id]
-            ? readingAnswers[q.id] === q.options[0]
-              ? "right"
-              : "wrong"
+            ? readingAnswers[q.id] === q.options[0] ? "right" : "wrong"
             : "no_time",
           totalTimeMs,
+          readingTimeMs,
         }));
 
-        const mathResults = mathProblems.map((p, i) => {
-          const answerObj = mathAnswers[i];
-          return {
-            studentEmail: email.toLowerCase(),
-            testName: "Lofi",
-            questionType: "math",
-            questionId: p.id,
-            status: answerObj
-              ? answerObj.answer === p.a * p.b
-                ? "right"
-                : "wrong"
-              : "no_time",
-            totalTimeMs,
-          };
-        });
+        const mathResults = mathAnswers.map((m) => ({
+          studentEmail: email.toLowerCase(),
+          testName: "Lofi",
+          questionType: "math",
+          questionId: m.id,
+          status: m.answer === m.a * m.b ? "right" : "wrong",
+          totalTimeMs,
+          mathTimeMs: m.timeMs,
+        }));
 
         const allResults = [...readingResults, ...mathResults];
 
@@ -126,8 +159,7 @@ export const TestLofi = ({ studentEmail }) => {
           console.error("Server error saving test results:", err);
         }
 
-        // ---- Unlock next test ----
-        const currentTestId = 4; // set this to the ID of this test
+        const currentTestId = 1;
         const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
         if (completed < currentTestId) {
           localStorage.setItem("completedTests", currentTestId.toString());
@@ -138,29 +170,6 @@ export const TestLofi = ({ studentEmail }) => {
     }
   }, [stage]);
 
-  // ---- Handlers ----
-  const handleQuestionChange = (id, value) =>
-    setReadingAnswers({ ...readingAnswers, [id]: value });
-
-  const handleMathAnswer = (e) => {
-    if (e.key === "Enter") {
-      const value = e.target.value.trim();
-      if (value === "") {
-        alert("Please enter a number before proceeding.");
-        return;
-      }
-      const numericValue = Number(value);
-      if (isNaN(numericValue)) {
-        alert("Please enter a valid number.");
-        return;
-      }
-      const problem = mathProblems[currentMathIndex];
-      setMathAnswers([...mathAnswers, { ...problem, answer: numericValue }]);
-      e.target.value = "";
-      if (currentMathIndex + 1 < mathProblems.length) setCurrentMathIndex(currentMathIndex + 1);
-      else setStage("closing");
-    }
-  };
 
   // ---- Render ----
   return (
@@ -168,7 +177,6 @@ export const TestLofi = ({ studentEmail }) => {
       <StarBackground />
       <div className="relative z-10 w-full max-w-3xl space-y-8">
 
-        {/* Reading Stage */}
         {stage === "reading" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4">
             <h1 className="text-3xl font-bold text-center">Reading Comprehension</h1>
@@ -185,7 +193,6 @@ export const TestLofi = ({ studentEmail }) => {
           </div>
         )}
 
-        {/* Questions Stage */}
         {stage === "questions" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-6 text-center">
             <h1 className="text-3xl font-bold mb-4">Reading Questions</h1>
@@ -210,7 +217,7 @@ export const TestLofi = ({ studentEmail }) => {
             ))}
             <div className="text-center">
               <button
-                onClick={() => setStage("math")}
+                onClick={handleProceedToMath}
                 className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
                 disabled={readingQuestions.some(q => !readingAnswers[q.id])}
               >
@@ -220,7 +227,6 @@ export const TestLofi = ({ studentEmail }) => {
           </div>
         )}
 
-        {/* Math Stage */}
         {stage === "math" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
             <h1 className="text-3xl font-bold mb-2">Math Problems</h1>
@@ -239,7 +245,6 @@ export const TestLofi = ({ studentEmail }) => {
           </div>
         )}
 
-        {/* Closing Stage */}
         {stage === "closing" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
             <h1 className="text-3xl font-bold">Test Complete</h1>
