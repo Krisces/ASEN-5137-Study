@@ -4,12 +4,13 @@ import { StarBackground } from "../components/StarBackground";
 
 export const Demo = () => {
     const navigate = useNavigate();
-    const [stage, setStage] = useState("audio"); // audio, reading, questions, math, closing
+    const [stage, setStage] = useState("audio"); // audio, reading, questions, mathInstructions, math, closing
     const [audioPlaying, setAudioPlaying] = useState(false);
     const [readingAnswers, setReadingAnswers] = useState({});
     const [currentMathIndex, setCurrentMathIndex] = useState(0);
     const [mathAnswers, setMathAnswers] = useState([]);
-    const audioRef = useRef(new Audio("/audio/bongos.mp3")); // useRef so audio persists across renders
+    const audioRef = useRef(new Audio("/audio/bongos.mp3"));
+    const mathTimerRef = useRef(null);
 
     const mathProblems = [
         { a: 3, b: 12 },
@@ -45,25 +46,44 @@ Hummingbirds have excellent memories and can recall which flowers they have visi
         setAudioPlaying(true);
     };
 
-    const handleAudioConfirm = () => {
-        // DO NOT stop audio here; it should continue playing
-        setStage("reading");
-    };
+    const handleAudioConfirm = () => setStage("reading");
 
     const handleReadingSubmit = () => setStage("questions");
 
     const handleQuestionChange = (id, value) =>
         setReadingAnswers({ ...readingAnswers, [id]: value });
 
+    const handleProceedToMathInstructions = () => {
+        // Ensure all reading questions have answers
+        const allAnswered = readingQuestions.every((q) => readingAnswers[q.id]);
+        if (!allAnswered) {
+            alert("Please answer all reading questions before proceeding.");
+            return;
+        }
+        setStage("mathInstructions");
+    };
+
+    const handleStartMathTest = () => {
+        setStage("math");
+        setCurrentMathIndex(0);
+        setMathAnswers([]);
+        mathTimerRef.current = setTimeout(() => setStage("closing"), 60 * 1000);
+    };
+
     const handleMathAnswer = (e) => {
         if (e.key === "Enter") {
+            const value = e.target.value.trim();
+            if (value === "" || isNaN(Number(value))) {
+                alert("Please enter a valid number before proceeding.");
+                return; // prevent skipping
+            }
+
             const problem = mathProblems[currentMathIndex];
-            setMathAnswers([...mathAnswers, { ...problem, answer: e.target.value }]);
+            setMathAnswers([...mathAnswers, { ...problem, answer: Number(value) }]);
             e.target.value = "";
+
             if (currentMathIndex + 1 < mathProblems.length) {
                 setCurrentMathIndex(currentMathIndex + 1);
-            } else {
-                setStage("closing");
             }
         }
     };
@@ -75,20 +95,20 @@ Hummingbirds have excellent memories and can recall which flowers they have visi
         navigate("/studyhome");
     };
 
-    // Stop audio if component unmounts
     useEffect(() => {
         return () => {
             const audio = audioRef.current;
             audio.pause();
             audio.currentTime = 0;
+            clearTimeout(mathTimerRef.current);
         };
     }, []);
 
     return (
         <div className="relative min-h-screen bg-black text-white px-4 py-12 flex flex-col items-center">
             <StarBackground />
-
             <div className="relative z-10 w-full max-w-3xl space-y-8">
+
                 {/* Audio Stage */}
                 {stage === "audio" && (
                     <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg text-center space-y-4">
@@ -120,11 +140,10 @@ Hummingbirds have excellent memories and can recall which flowers they have visi
                     <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4">
                         <h1 className="text-3xl font-bold text-center">Reading Comprehension</h1>
                         <p className="text-center">
-                            Read the paragraph below carefully. You will answer questions afterward.
+                            You will be given a paragraph to read. After your reading is complete, 
+                            you will be asked questions about its content. Make sure you read carefully.
                         </p>
-                        <p className="bg-gray-700/60 p-4 rounded text-left mt-2 mb-2">
-                            {readingParagraph}
-                        </p>
+                        <p className="bg-gray-700/60 p-4 rounded text-left mt-2 mb-2">{readingParagraph}</p>
                         <div className="text-center">
                             <button
                                 onClick={handleReadingSubmit}
@@ -142,10 +161,7 @@ Hummingbirds have excellent memories and can recall which flowers they have visi
                         <h1 className="text-3xl font-bold mb-4">Reading Questions</h1>
                         {readingQuestions.map((q) => (
                             <div key={q.id} className="space-y-2">
-                                {/* Center the question */}
                                 <p className="text-center">{q.question}</p>
-
-                                {/* Left-align the options */}
                                 <div className="space-y-1 text-left mx-auto max-w-md">
                                     {q.options.map((opt) => (
                                         <label key={opt} className="flex items-center space-x-2">
@@ -164,21 +180,40 @@ Hummingbirds have excellent memories and can recall which flowers they have visi
                         ))}
                         <div className="text-center">
                             <button
-                                onClick={() => setStage("math")}
+                                onClick={handleProceedToMathInstructions}
                                 className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700"
                             >
-                                Proceed to Math
+                                Proceed to Math Instructions
                             </button>
                         </div>
                     </div>
                 )}
 
+                {/* Math Instructions Stage */}
+                {stage === "mathInstructions" && (
+                    <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
+                        <h1 className="text-3xl font-bold mb-2">Math Test Instructions</h1>
+                        <p>
+                            You will be given multiplication problems from 1×1 up to 13×13. 
+                            You must enter a value for each problem. Press Enter only after entering a number.
+                        </p>
+                        <p>
+                            You will have **1 minute** to answer as many problems as possible. 
+                        </p>
+                        <button
+                            onClick={handleStartMathTest}
+                            className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700"
+                        >
+                            Start Math Test
+                        </button>
+                    </div>
+                )}
 
                 {/* Math Stage */}
                 {stage === "math" && (
                     <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
                         <h1 className="text-3xl font-bold mb-2">Math Problems</h1>
-                        <p>Solve the multiplication problems below. Press Enter after each answer.</p>
+                        <p>Enter a number for each problem and press Enter. Skipping is not allowed.</p>
                         <p className="mt-2">
                             Problem {currentMathIndex + 1} of {mathProblems.length}:{" "}
                             {mathProblems[currentMathIndex].a} × {mathProblems[currentMathIndex].b} =
@@ -188,6 +223,7 @@ Hummingbirds have excellent memories and can recall which flowers they have visi
                             className="bg-gray-700/60 border border-gray-600 px-2 py-1 rounded w-full"
                             onKeyDown={handleMathAnswer}
                             placeholder="Type answer and press Enter"
+                            autoFocus
                         />
                     </div>
                 )}
@@ -208,6 +244,7 @@ Hummingbirds have excellent memories and can recall which flowers they have visi
                         </button>
                     </div>
                 )}
+
             </div>
         </div>
     );
