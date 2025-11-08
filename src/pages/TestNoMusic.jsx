@@ -136,11 +136,26 @@ export const TestNoMusic = ({ studentEmail }) => {
   const handleMathAnswer = (e) => {
     if (e.key === "Enter") {
       const value = e.target.value.trim();
-      if (!value) return; // ignore empty input
+
+      // Block empty input
+      if (value === "") {
+        alert("Please enter a number before proceeding.");
+        return;
+      }
+
+      const numericValue = Number(value);
+
+      // Block invalid numbers
+      if (isNaN(numericValue)) {
+        alert("Please enter a valid number.");
+        return;
+      }
 
       const problem = mathProblems[currentMathIndex];
-      setMathAnswers([...mathAnswers, { ...problem, answer: Number(value) }]);
+
+      setMathAnswers([...mathAnswers, { ...problem, answer: numericValue }]);
       e.target.value = "";
+
       if (currentMathIndex + 1 < mathProblems.length) {
         setCurrentMathIndex(currentMathIndex + 1);
       } else {
@@ -148,6 +163,7 @@ export const TestNoMusic = ({ studentEmail }) => {
       }
     }
   };
+
 
 
   // ---- Render ----
