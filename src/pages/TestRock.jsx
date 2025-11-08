@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { StarBackground } from "../components/StarBackground";
+import { useNavigate } from "react-router-dom";
 
 export const TestRock = ({ studentEmail }) => {
   const navigate = useNavigate();
-  const [stage, setStage] = useState("reading");
+  const [stage, setStage] = useState("reading"); // reading, questions, math, closing
   const [readingAnswers, setReadingAnswers] = useState({});
   const [currentMathIndex, setCurrentMathIndex] = useState(0);
   const [mathAnswers, setMathAnswers] = useState([]);
@@ -40,7 +40,7 @@ export const TestRock = ({ studentEmail }) => {
     { id: 41, a: 9, b: 4 }, { id: 42, a: 12, b: 12 }, { id: 43, a: 13, b: 2 },
   ];
 
-  // Start timers and music
+  // ---- Timers & Music ----
   useEffect(() => {
     startTimeRef.current = Date.now();
     const audio = audioRef.current;
@@ -60,12 +60,11 @@ export const TestRock = ({ studentEmail }) => {
     };
   }, []);
 
-  // Math timer
   useEffect(() => {
     if (stage === "math") {
-      const mathStart = Date.now();
+      const mathStartTime = Date.now();
       mathTimerRef.current = setInterval(() => {
-        const elapsed = Date.now() - mathStart;
+        const elapsed = Date.now() - mathStartTime;
         if (elapsed >= MATH_TIME_MS) setStage("closing");
       }, 500);
     } else {
@@ -73,7 +72,7 @@ export const TestRock = ({ studentEmail }) => {
     }
   }, [stage]);
 
-  // Auto-save results when closing
+  // ---- Save results ----
   useEffect(() => {
     if (stage === "closing") {
       const saveResults = async () => {
@@ -82,23 +81,34 @@ export const TestRock = ({ studentEmail }) => {
 
         const totalTimeMs = Math.min(Date.now() - startTimeRef.current, MAX_TIME_MS);
 
-        const readingResults = readingQuestions.map(q => ({
+        const readingResults = readingQuestions.map((q) => ({
           studentEmail: email.toLowerCase(),
           testName: "Rock",
           questionType: "reading",
           questionId: q.id,
-          isCorrect: readingAnswers[q.id] === q.options[0],
-          totalTimeMs
+          status: readingAnswers[q.id]
+            ? readingAnswers[q.id] === q.options[0]
+              ? "right"
+              : "wrong"
+            : "no_time",
+          totalTimeMs,
         }));
 
-        const mathResults = mathAnswers.map(a => ({
-          studentEmail: email.toLowerCase(),
-          testName: "Rock",
-          questionType: "math",
-          questionId: a.id,
-          isCorrect: a.answer === a.a * a.b,
-          totalTimeMs
-        }));
+        const mathResults = mathProblems.map((p, i) => {
+          const answerObj = mathAnswers[i];
+          return {
+            studentEmail: email.toLowerCase(),
+            testName: "Rock",
+            questionType: "math",
+            questionId: p.id,
+            status: answerObj
+              ? answerObj.answer === p.a * p.b
+                ? "right"
+                : "wrong"
+              : "no_time",
+            totalTimeMs,
+          };
+        });
 
         const allResults = [...readingResults, ...mathResults];
 
@@ -109,21 +119,20 @@ export const TestRock = ({ studentEmail }) => {
             body: JSON.stringify({
               studentEmail: email,
               testName: "Rock",
-              results: allResults.length ? allResults : [],
+              results: allResults,
             }),
           });
-
           const data = await res.json();
           if (!data.success) console.error("Error saving test results:", data);
-
-          // Unlock next test
-          const currentTestId = 3;
-          const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
-          if (completed < currentTestId) {
-            localStorage.setItem("completedTests", currentTestId.toString());
-          }
         } catch (err) {
           console.error("Server error saving test results:", err);
+        }
+
+        // ---- Unlock next test ----
+        const currentTestId = 3; // set this to the ID of this test
+        const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
+        if (completed < currentTestId) {
+          localStorage.setItem("completedTests", currentTestId.toString());
         }
       };
 
@@ -131,15 +140,27 @@ export const TestRock = ({ studentEmail }) => {
     }
   }, [stage]);
 
-  // Handlers
+  // ---- Handlers ----
   const handleQuestionChange = (id, value) =>
     setReadingAnswers({ ...readingAnswers, [id]: value });
 
   const handleMathAnswer = (e) => {
     if (e.key === "Enter") {
+      const value = e.target.value.trim();
+      if (value === "") {
+        alert("Please enter a number before proceeding.");
+        return;
+      }
+      const numericValue = Number(value);
+      if (isNaN(numericValue)) {
+        alert("Please enter a valid number.");
+        return;
+      }
+
       const problem = mathProblems[currentMathIndex];
-      setMathAnswers([...mathAnswers, { ...problem, answer: Number(e.target.value) }]);
+      setMathAnswers([...mathAnswers, { ...problem, answer: numericValue }]);
       e.target.value = "";
+
       if (currentMathIndex + 1 < mathProblems.length) {
         setCurrentMathIndex(currentMathIndex + 1);
       } else {
@@ -148,7 +169,7 @@ export const TestRock = ({ studentEmail }) => {
     }
   };
 
-  // Render
+  // ---- Render ----
   return (
     <div className="relative min-h-screen bg-black text-white px-4 py-12 flex flex-col items-center">
       <StarBackground />
@@ -197,7 +218,8 @@ export const TestRock = ({ studentEmail }) => {
             <div className="text-center">
               <button
                 onClick={() => setStage("math")}
-                className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700"
+                className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+                disabled={readingQuestions.some(q => !readingAnswers[q.id])}
               >
                 Proceed to Math
               </button>
@@ -219,6 +241,7 @@ export const TestRock = ({ studentEmail }) => {
               className="bg-gray-700/60 border border-gray-600 px-2 py-1 rounded w-full"
               onKeyDown={handleMathAnswer}
               placeholder="Type answer and press Enter"
+              autoFocus
             />
           </div>
         )}

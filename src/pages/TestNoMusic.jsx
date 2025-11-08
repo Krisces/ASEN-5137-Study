@@ -123,6 +123,13 @@ export const TestNoMusic = ({ studentEmail }) => {
         } catch (err) {
           console.error("Server error saving test results:", err);
         }
+
+        // ---- Unlock next test ----
+        const currentTestId = 1; // set this to the ID of this test
+        const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
+        if (completed < currentTestId) {
+          localStorage.setItem("completedTests", currentTestId.toString());
+        }
       };
 
       saveResults();
