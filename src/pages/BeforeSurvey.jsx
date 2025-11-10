@@ -46,7 +46,7 @@ export const BeforeSurvey = () => {
     const completed = getCookie("completedStudy");
     if (completed && !EXCEPTION_EMAILS.includes(completed)) {
       alert("You’ve already completed this study. Thank you!");
-      navigate("/demo");
+      navigate("/thank-you");
     }
   }, [navigate]);
 
@@ -120,22 +120,22 @@ export const BeforeSurvey = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-purple-900 via-black to-purple-950 text-white overflow-x-hidden flex flex-col items-center px-4 py-12">
+    <div className="relative min-h-screen flex flex-col items-center bg-black text-white px-4 pb-20 pt-20">
       <StarBackground />
 
-      <div className="z-10 w-full max-w-3xl text-center mb-10">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 animate-fade-in">
+      <div className="z-10 w-full max-w-3xl text-center mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold mb-4">
           Welcome to the Cognitive Music Study
         </h1>
-        <p className="text-gray-300 text-lg md:text-xl animate-fade-in-delay-1">
-          Before you start, please fill out this short survey to help us understand your
-          background and music listening habits. The study takes about 15–20 minutes.
+        <p className="text-gray-300">
+          Before you start, please fill out this short survey. This will help us
+          understand your background and music listening habits.
         </p>
       </div>
 
       <form
         onSubmit={handleSubmit}
-        className="z-10 w-full max-w-xl bg-purple-900/80 border border-purple-700 p-8 rounded-2xl shadow-xl space-y-6 animate-fade-in-delay-2"
+        className="z-10 w-full max-w-xl bg-gray-800/80 border border-purple-600/50 p-8 rounded-2xl shadow-xl space-y-6"
       >
         <div>
           <label htmlFor="studentEmail" className="block mb-2 font-medium">
@@ -147,9 +147,9 @@ export const BeforeSurvey = () => {
             name="studentEmail"
             value={formData.studentEmail}
             onChange={handleChange}
-            placeholder="yourname@university.edu"
             required
-            className="w-full px-4 py-3 rounded-xl bg-purple-800 border border-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            placeholder="yourname@university.edu"
+            className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
         </div>
 
@@ -167,7 +167,7 @@ export const BeforeSurvey = () => {
                 onChange={handleChange}
                 placeholder="18"
                 required
-                className="w-full px-4 py-3 rounded-xl bg-purple-800 border border-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
             </div>
 
@@ -181,7 +181,7 @@ export const BeforeSurvey = () => {
                 value={formData.gender}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 rounded-xl bg-purple-800 border border-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
               >
                 <option value="">Select</option>
                 <option value="female">Female</option>
@@ -203,7 +203,7 @@ export const BeforeSurvey = () => {
                 onChange={handleChange}
                 placeholder="Aerospace Engineering, Psychology, etc."
                 required
-                className="w-full px-4 py-3 rounded-xl bg-purple-800 border border-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
             </div>
 
@@ -217,7 +217,7 @@ export const BeforeSurvey = () => {
                 value={formData.isMusician}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 rounded-xl bg-purple-800 border border-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
               >
                 <option value="">Select</option>
                 <option value="yes">Yes</option>
@@ -238,7 +238,7 @@ export const BeforeSurvey = () => {
                   onChange={handleChange}
                   placeholder="e.g., 5 years of piano, music major, etc."
                   required
-                  className="w-full px-4 py-3 rounded-xl bg-purple-800 border border-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>
             )}
@@ -255,7 +255,7 @@ export const BeforeSurvey = () => {
                 onChange={handleChange}
                 placeholder="Classical, Rock, Lofi..."
                 required
-                className="w-full px-4 py-3 rounded-xl bg-purple-800 border border-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
             </div>
 
@@ -272,7 +272,7 @@ export const BeforeSurvey = () => {
                 min={0}
                 placeholder="2"
                 required
-                className="w-full px-4 py-3 rounded-xl bg-purple-800 border border-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
             </div>
 
@@ -282,7 +282,7 @@ export const BeforeSurvey = () => {
                 id="consent"
                 checked={consentGiven}
                 onChange={() => setConsentGiven(!consentGiven)}
-                className="h-5 w-5 text-purple-500 rounded border-purple-400 focus:ring-purple-500"
+                className="h-5 w-5 text-purple-500 rounded border-gray-400 focus:ring-purple-500"
               />
               <label htmlFor="consent" className="text-gray-300 text-sm">
                 I consent to participate in this study and understand that my responses will be recorded.
@@ -297,7 +297,7 @@ export const BeforeSurvey = () => {
             !EXCEPTION_EMAILS.includes(formData.studentEmail.trim().toLowerCase()) &&
             !consentGiven
           }
-          className={`w-full py-4 rounded-2xl font-semibold transition-colors cosmic-button ${
+          className={`w-full py-3 rounded-2xl font-semibold transition-colors cosmic-button ${
             EXCEPTION_EMAILS.includes(formData.studentEmail.trim().toLowerCase()) || consentGiven
               ? "bg-purple-600 hover:bg-purple-700 text-white"
               : "bg-gray-600 text-gray-300 cursor-not-allowed"
