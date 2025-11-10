@@ -265,16 +265,20 @@ export const TestLofi = ({ studentEmail }) => {
 
         {stage === "closing" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
-            <h1 className="text-3xl font-bold">Test Complete</h1>
-            <p>Great job! You have finished this test. Proceed to the next test when ready.</p>
+            <h1 className="text-3xl font-bold">Congratulations!</h1>
+            <p>
+              You have completed all four tests. Thank you for your effort!
+              Please complete this short post-survey to finish the study.
+            </p>
             <button
               onClick={() => navigate("/aftersurvey")}
               className="bg-green-600 px-4 py-2 rounded hover:bg-green-700"
             >
-              Proceed to Next Test
+              Proceed to Post-Survey
             </button>
           </div>
         )}
+
 
       </div>
     </div>
