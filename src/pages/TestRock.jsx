@@ -94,8 +94,8 @@ export const TestRock = ({ studentEmail }) => {
       const problem = mathProblems[currentMathIndex];
       const answerTime = Date.now() - mathQuestionStartTimeRef.current;
 
-      setMathAnswers([
-        ...mathAnswers,
+      setMathAnswers((prev) => [
+        ...prev,
         { ...problem, answer: Number(value), timeMs: answerTime },
       ]);
 
@@ -120,6 +120,7 @@ export const TestRock = ({ studentEmail }) => {
         const totalTimeMs = Math.min(Date.now() - startTimeRef.current, MAX_TIME_MS);
         const readingTimeMs = readingTimeRef.current || 0;
 
+        // Reading
         const readingResults = readingQuestions.map((q) => ({
           studentEmail: email.toLowerCase(),
           testName: "Rock",
@@ -132,6 +133,20 @@ export const TestRock = ({ studentEmail }) => {
           readingTimeMs,
         }));
 
+        // Math: include unanswered as no_time
+        const answeredIds = mathAnswers.map((m) => m.id);
+        const unanswered = mathProblems
+          .filter((p) => !answeredIds.includes(p.id))
+          .map((p) => ({
+            studentEmail: email.toLowerCase(),
+            testName: "Rock",
+            questionType: "math",
+            questionId: p.id,
+            status: "no_time",
+            totalTimeMs,
+            mathTimeMs: 0,
+          }));
+
         const mathResults = mathAnswers.map((m) => ({
           studentEmail: email.toLowerCase(),
           testName: "Rock",
@@ -142,7 +157,7 @@ export const TestRock = ({ studentEmail }) => {
           mathTimeMs: m.timeMs,
         }));
 
-        const allResults = [...readingResults, ...mathResults];
+        const allResults = [...readingResults, ...mathResults, ...unanswered];
 
         try {
           const res = await fetch("/api/saveTestResults", {
@@ -160,7 +175,7 @@ export const TestRock = ({ studentEmail }) => {
           console.error("Server error saving test results:", err);
         }
 
-        const currentTestId = 1;
+        const currentTestId = 4;
         const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
         if (completed < currentTestId) {
           localStorage.setItem("completedTests", currentTestId.toString());
@@ -170,7 +185,6 @@ export const TestRock = ({ studentEmail }) => {
       saveResults();
     }
   }, [stage]);
-
 
   // ---- Render ----
   return (
@@ -258,7 +272,6 @@ export const TestRock = ({ studentEmail }) => {
             </button>
           </div>
         )}
-
       </div>
     </div>
   );

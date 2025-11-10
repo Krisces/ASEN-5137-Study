@@ -144,8 +144,9 @@ Hummingbirds have excellent memories and can recall which flowers they have visi
                     <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-6">
                         <h1 className="text-3xl font-bold text-center mb-4">Reading Comprehension</h1>
                         <p className="text-center mb-4">
-                            You will be given a paragraph to read. After your reading is complete,
-                            you will be asked questions about the paragraph.
+                            You will be given a paragraph to read. During the test, after your reading is complete, 
+                            you will be asked 5 questions about the paragraph and its content. 
+                            Make sure you read and understand it properly to answer the questions afterwards.
                         </p>
                         <p className="bg-gray-700/60 p-4 rounded text-left">{readingParagraph}</p>
                         <div className="text-center mt-6">

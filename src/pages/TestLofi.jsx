@@ -119,6 +119,7 @@ export const TestLofi = ({ studentEmail }) => {
         const totalTimeMs = Math.min(Date.now() - startTimeRef.current, MAX_TIME_MS);
         const readingTimeMs = readingTimeRef.current || 0;
 
+        // Reading results
         const readingResults = readingQuestions.map((q) => ({
           studentEmail: email.toLowerCase(),
           testName: "Lofi",
@@ -131,15 +132,31 @@ export const TestLofi = ({ studentEmail }) => {
           readingTimeMs,
         }));
 
-        const mathResults = mathAnswers.map((m) => ({
-          studentEmail: email.toLowerCase(),
-          testName: "Lofi",
-          questionType: "math",
-          questionId: m.id,
-          status: m.answer === m.a * m.b ? "right" : "wrong",
-          totalTimeMs,
-          mathTimeMs: m.timeMs,
-        }));
+        // Math results (includes unanswered as "no_time")
+        const mathResults = mathProblems.map((problem) => {
+          const answered = mathAnswers.find((a) => a.id === problem.id);
+          if (answered) {
+            return {
+              studentEmail: email.toLowerCase(),
+              testName: "Lofi",
+              questionType: "math",
+              questionId: problem.id,
+              status: answered.answer === problem.a * problem.b ? "right" : "wrong",
+              totalTimeMs,
+              mathTimeMs: answered.timeMs,
+            };
+          } else {
+            return {
+              studentEmail: email.toLowerCase(),
+              testName: "Lofi",
+              questionType: "math",
+              questionId: problem.id,
+              status: "no_time",
+              totalTimeMs,
+              mathTimeMs: null,
+            };
+          }
+        });
 
         const allResults = [...readingResults, ...mathResults];
 
@@ -169,6 +186,7 @@ export const TestLofi = ({ studentEmail }) => {
       saveResults();
     }
   }, [stage]);
+
 
 
   // ---- Render ----

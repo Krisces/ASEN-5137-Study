@@ -44,16 +44,14 @@ export const TestNoMusic = ({ studentEmail }) => {
   // ---- Timers ----
   useEffect(() => {
     startTimeRef.current = Date.now();
-    readingStartTimeRef.current = Date.now(); // start reading immediately
+    readingStartTimeRef.current = Date.now();
 
     timerRef.current = setInterval(() => {
       const elapsed = Date.now() - startTimeRef.current;
       if (elapsed >= MAX_TIME_MS) setStage("closing");
     }, 500);
 
-    return () => {
-      clearInterval(timerRef.current);
-    };
+    return () => clearInterval(timerRef.current);
   }, []);
 
   // ---- 1-minute math limit ----
@@ -63,14 +61,13 @@ export const TestNoMusic = ({ studentEmail }) => {
       mathTimer = setTimeout(() => setStage("closing"), MATH_TIME_MS);
       mathQuestionStartTimeRef.current = Date.now();
     }
-    return () => {
-      if (mathTimer) clearTimeout(mathTimer);
-    };
+    return () => clearTimeout(mathTimer);
   }, [stage]);
 
   // ---- Handlers ----
-  const handleQuestionChange = (id, value) =>
+  const handleQuestionChange = (id, value) => {
     setReadingAnswers({ ...readingAnswers, [id]: value });
+  };
 
   const handleProceedToMath = () => {
     readingTimeRef.current = Date.now() - readingStartTimeRef.current;
@@ -88,8 +85,8 @@ export const TestNoMusic = ({ studentEmail }) => {
       const problem = mathProblems[currentMathIndex];
       const answerTime = Date.now() - mathQuestionStartTimeRef.current;
 
-      setMathAnswers([
-        ...mathAnswers,
+      setMathAnswers((prev) => [
+        ...prev,
         { ...problem, answer: Number(value), timeMs: answerTime },
       ]);
 
@@ -114,6 +111,7 @@ export const TestNoMusic = ({ studentEmail }) => {
         const totalTimeMs = Math.min(Date.now() - startTimeRef.current, MAX_TIME_MS);
         const readingTimeMs = readingTimeRef.current || 0;
 
+        // Reading results
         const readingResults = readingQuestions.map((q) => ({
           studentEmail: email.toLowerCase(),
           testName: "NoMusic",
@@ -126,15 +124,31 @@ export const TestNoMusic = ({ studentEmail }) => {
           readingTimeMs,
         }));
 
-        const mathResults = mathAnswers.map((m) => ({
-          studentEmail: email.toLowerCase(),
-          testName: "NoMusic",
-          questionType: "math",
-          questionId: m.id,
-          status: m.answer === m.a * m.b ? "right" : "wrong",
-          totalTimeMs,
-          mathTimeMs: m.timeMs,
-        }));
+        // Math results (includes unanswered as "no_time")
+        const mathResults = mathProblems.map((problem) => {
+          const answered = mathAnswers.find((a) => a.id === problem.id);
+          if (answered) {
+            return {
+              studentEmail: email.toLowerCase(),
+              testName: "NoMusic",
+              questionType: "math",
+              questionId: problem.id,
+              status: answered.answer === problem.a * problem.b ? "right" : "wrong",
+              totalTimeMs,
+              mathTimeMs: answered.timeMs,
+            };
+          } else {
+            return {
+              studentEmail: email.toLowerCase(),
+              testName: "NoMusic",
+              questionType: "math",
+              questionId: problem.id,
+              status: "no_time",
+              totalTimeMs,
+              mathTimeMs: null,
+            };
+          }
+        });
 
         const allResults = [...readingResults, ...mathResults];
 
@@ -170,7 +184,6 @@ export const TestNoMusic = ({ studentEmail }) => {
     <div className="relative min-h-screen bg-black text-white px-4 py-12 flex flex-col items-center">
       <StarBackground />
       <div className="relative z-10 w-full max-w-3xl space-y-8">
-
         {stage === "reading" && (
           <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4">
             <h1 className="text-3xl font-bold text-center">Reading Comprehension</h1>
@@ -251,7 +264,6 @@ export const TestNoMusic = ({ studentEmail }) => {
             </button>
           </div>
         )}
-
       </div>
     </div>
   );

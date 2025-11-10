@@ -19,7 +19,6 @@ export const TestClassical = ({ studentEmail }) => {
   const MAX_TIME_MS = 3 * 60 * 1000; // 3 minutes total
   const MATH_TIME_MS = 1 * 60 * 1000; // 1 minute for math section
 
-  // ---- UNIQUE TestClassical ----
   const paragraph = `Classical music has a long history and has influenced many forms of art and culture. Composers like Mozart and Beethoven created works that are still widely performed today. The structure of classical compositions often includes symphonies, concertos, and sonatas, and the music is known for its emotional depth and technical precision. Listening to classical music has been associated with relaxation, focus, and enhanced cognitive performance.`;
 
   const readingQuestions = [
@@ -132,15 +131,30 @@ export const TestClassical = ({ studentEmail }) => {
           readingTimeMs,
         }));
 
-        const mathResults = mathAnswers.map((m) => ({
-          studentEmail: email.toLowerCase(),
-          testName: "Classical",
-          questionType: "math",
-          questionId: m.id,
-          status: m.answer === m.a * m.b ? "right" : "wrong",
-          totalTimeMs,
-          mathTimeMs: m.timeMs,
-        }));
+        // Mark unanswered math problems as no_time
+        const answeredIds = mathAnswers.map((m) => m.id);
+        const unanswered = mathProblems.filter((m) => !answeredIds.includes(m.id));
+
+        const mathResults = [
+          ...mathAnswers.map((m) => ({
+            studentEmail: email.toLowerCase(),
+            testName: "Classical",
+            questionType: "math",
+            questionId: m.id,
+            status: m.answer === m.a * m.b ? "right" : "wrong",
+            totalTimeMs,
+            mathTimeMs: m.timeMs,
+          })),
+          ...unanswered.map((m) => ({
+            studentEmail: email.toLowerCase(),
+            testName: "Classical",
+            questionType: "math",
+            questionId: m.id,
+            status: "no_time",
+            totalTimeMs,
+            mathTimeMs: 0,
+          })),
+        ];
 
         const allResults = [...readingResults, ...mathResults];
 
@@ -160,7 +174,7 @@ export const TestClassical = ({ studentEmail }) => {
           console.error("Server error saving test results:", err);
         }
 
-        const currentTestId = 1;
+        const currentTestId = 2;
         const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
         if (completed < currentTestId) {
           localStorage.setItem("completedTests", currentTestId.toString());
@@ -170,7 +184,6 @@ export const TestClassical = ({ studentEmail }) => {
       saveResults();
     }
   }, [stage]);
-
 
   // ---- Render ----
   return (
