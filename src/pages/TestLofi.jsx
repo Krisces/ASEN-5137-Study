@@ -176,7 +176,7 @@ export const TestLofi = ({ studentEmail }) => {
           console.error("Server error saving test results:", err);
         }
 
-        const currentTestId = 1;
+        const currentTestId = 4;
         const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
         if (completed < currentTestId) {
           localStorage.setItem("completedTests", currentTestId.toString());
@@ -268,7 +268,7 @@ export const TestLofi = ({ studentEmail }) => {
             <h1 className="text-3xl font-bold">Test Complete</h1>
             <p>Great job! You have finished this test. Proceed to the next test when ready.</p>
             <button
-              onClick={() => navigate("/studyhome")}
+              onClick={() => navigate("/aftersurvey")}
               className="bg-green-600 px-4 py-2 rounded hover:bg-green-700"
             >
               Proceed to Next Test

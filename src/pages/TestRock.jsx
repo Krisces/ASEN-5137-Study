@@ -175,7 +175,7 @@ export const TestRock = ({ studentEmail }) => {
           console.error("Server error saving test results:", err);
         }
 
-        const currentTestId = 4;
+        const currentTestId = 3;
         const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
         if (completed < currentTestId) {
           localStorage.setItem("completedTests", currentTestId.toString());
