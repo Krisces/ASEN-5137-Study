@@ -1,0 +1,235 @@
+{
+  "id": "9eb04c4f-0a23-4945-84af-4566f698c36d",
+  "prevId": "83920149-5069-41f8-9382-0d853db3885f",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.post_survey_submissions": {
+      "name": "post_survey_submissions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "student_email": {
+          "name": "student_email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "knew_songs": {
+          "name": "knew_songs",
+          "type": "varchar(5)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "known_songs_list": {
+          "name": "known_songs_list",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": null
+        },
+        "familiarity_score": {
+          "name": "familiarity_score",
+          "type": "numeric(4, 2)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": null
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.survey_submissions": {
+      "name": "survey_submissions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "student_email": {
+          "name": "student_email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "age": {
+          "name": "age",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": null
+        },
+        "gender": {
+          "name": "gender",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": null
+        },
+        "major": {
+          "name": "major",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": null
+        },
+        "is_musician": {
+          "name": "is_musician",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": null
+        },
+        "musical_experience": {
+          "name": "musical_experience",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": null
+        },
+        "favorite_music": {
+          "name": "favorite_music",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": null
+        },
+        "daily_music_hours": {
+          "name": "daily_music_hours",
+          "type": "numeric(4, 2)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": null
+        },
+        "is_exception": {
+          "name": "is_exception",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.test_results": {
+      "name": "test_results",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "student_email": {
+          "name": "student_email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "test_name": {
+          "name": "test_name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "question_type": {
+          "name": "question_type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "question_id": {
+          "name": "question_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "total_time_ms": {
+          "name": "total_time_ms",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": null
+        },
+        "reading_time_ms": {
+          "name": "reading_time_ms",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": null
+        },
+        "math_time_ms": {
+          "name": "math_time_ms",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": null
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

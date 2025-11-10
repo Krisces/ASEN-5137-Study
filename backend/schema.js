@@ -17,6 +17,15 @@ export const SurveySubmissions = pgTable("survey_submissions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const PostSurveySubmissions = pgTable("post_survey_submissions", {
+  id: serial("id").primaryKey(),
+  studentEmail: varchar("student_email", { length: 255 }).notNull(),
+  knewSongs: varchar("knew_songs", { length: 5 }).notNull(), // "yes" or "no"
+  knownSongsList: varchar("known_songs_list", { length: 500 }).default(null),
+  familiarityScore: numeric("familiarity_score", { precision: 4, scale: 2 }).default(null),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // ==============================
 // 🧠 Test Results Table
 // ==============================

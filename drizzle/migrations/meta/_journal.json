@@ -43,6 +43,13 @@
       "when": 1762738993285,
       "tag": "0005_typical_rattler",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1762739496515,
+      "tag": "0006_thin_dragon_man",
+      "breakpoints": true
     }
   ]
 }
