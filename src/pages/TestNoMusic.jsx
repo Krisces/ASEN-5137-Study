@@ -31,7 +31,7 @@ export const TestNoMusic = ({ studentEmail }) => {
     { id: 41, a: 9, b: 13 }, { id: 42, a: 12, b: 10 }, { id: 43, a: 13, b: 13 }
   ];
 
-  const paragraph = `Bees are essential pollinators in many ecosystems...`;
+  const paragraph = `Bees are essential pollinators in many ecosystems, helping plants reproduce by transferring pollen from flower to flower. They communicate using dances to indicate food sources to other bees in the hive. A single bee can visit hundreds of flowers in a day, collecting nectar and pollen to support its colony, while also contributing to the growth of fruits and vegetables. The health of bee populations directly impacts the success of many crops humans rely on. Conserving habitats and reducing pesticide use are key to protecting bees and maintaining balanced ecosystems.`;
 
   const readingQuestions = [
     { id: 1, question: "What is the main role of bees in ecosystems?", options: ["Pollination", "Hibernation", "Migration", "Photosynthesis"] },
