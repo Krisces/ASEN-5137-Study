@@ -74,19 +74,20 @@ export const AfterSurvey = () => {
       {stage === "form" && (
         <form
           onSubmit={handleSubmit}
-          className="z-10 w-full max-w-xl bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-6"
+          className="z-10 w-full max-w-xl bg-gray-800/80 border border-purple-600/50 p-8 rounded-2xl shadow-xl space-y-6"
         >
           <p className="text-gray-300 mb-4">
             For each song below, indicate which ones you know and how familiar you are with them (0 = not at all, 10 = very well).
           </p>
 
           {songOptions.map((song) => (
-            <div key={song} className="bg-gray-700 p-4 rounded-md space-y-2">
+            <div key={song} className="bg-gray-700/60 border border-purple-500/30 p-4 rounded-2xl space-y-2">
               <label className="flex items-center space-x-2">
                 <input
                   type="checkbox"
                   checked={selectedSongs[song].known}
                   onChange={() => handleCheckboxChange(song)}
+                  className="accent-purple-500 focus:ring-purple-500"
                 />
                 <span className="font-medium">{song}</span>
               </label>
@@ -103,7 +104,7 @@ export const AfterSurvey = () => {
                     step="1"
                     value={selectedSongs[song].familiarity}
                     onChange={(e) => handleSliderChange(song, e.target.value)}
-                    className="w-full"
+                    className="w-full accent-purple-500 focus:ring-purple-500"
                   />
                   <p className="text-gray-400 text-sm mt-1">
                     {selectedSongs[song].familiarity}/10
@@ -115,7 +116,7 @@ export const AfterSurvey = () => {
 
           <button
             type="submit"
-            className="w-full py-3 rounded-md font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+            className="cosmic-button w-full py-3 font-semibold"
           >
             Submit Post-Survey
           </button>
@@ -123,7 +124,7 @@ export const AfterSurvey = () => {
       )}
 
       {stage === "thankYou" && (
-        <div className="z-10 w-full max-w-xl bg-gray-800/80 p-8 rounded-lg shadow-lg text-center space-y-6">
+        <div className="z-10 w-full max-w-xl bg-gray-800/80 border border-purple-600/50 p-8 rounded-2xl shadow-xl text-center space-y-6">
           <h2 className="text-3xl font-bold">Thank You!</h2>
           <p className="text-gray-300">
             Your responses have been recorded. We appreciate your participation in the study.

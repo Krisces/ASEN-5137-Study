@@ -119,7 +119,6 @@ export const TestLofi = ({ studentEmail }) => {
         const totalTimeMs = Math.min(Date.now() - startTimeRef.current, MAX_TIME_MS);
         const readingTimeMs = readingTimeRef.current || 0;
 
-        // Reading results
         const readingResults = readingQuestions.map((q) => ({
           studentEmail: email.toLowerCase(),
           testName: "Lofi",
@@ -132,7 +131,6 @@ export const TestLofi = ({ studentEmail }) => {
           readingTimeMs,
         }));
 
-        // Math results (includes unanswered as "no_time")
         const mathResults = mathProblems.map((problem) => {
           const answered = mathAnswers.find((a) => a.id === problem.id);
           if (answered) {
@@ -187,8 +185,6 @@ export const TestLofi = ({ studentEmail }) => {
     }
   }, [stage]);
 
-
-
   // ---- Render ----
   return (
     <div className="relative min-h-screen bg-black text-white px-4 py-12 flex flex-col items-center">
@@ -196,14 +192,14 @@ export const TestLofi = ({ studentEmail }) => {
       <div className="relative z-10 w-full max-w-3xl space-y-8">
 
         {stage === "reading" && (
-          <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4">
+          <div className="bg-gray-800/80 border border-purple-600/50 p-8 rounded-2xl shadow-xl space-y-4">
             <h1 className="text-3xl font-bold text-center">Reading Comprehension</h1>
             <p className="text-center">Read the paragraph below carefully. You will answer questions afterward.</p>
-            <p className="bg-gray-700/60 p-4 rounded text-left mt-2 mb-2">{paragraph}</p>
+            <p className="bg-gray-700/60 p-4 rounded-2xl text-left mt-2 mb-2">{paragraph}</p>
             <div className="text-center">
               <button
                 onClick={() => setStage("questions")}
-                className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700"
+                className="cosmic-button"
               >
                 Proceed to Questions
               </button>
@@ -212,7 +208,7 @@ export const TestLofi = ({ studentEmail }) => {
         )}
 
         {stage === "questions" && (
-          <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-6 text-center">
+          <div className="bg-gray-800/80 border border-purple-600/50 p-8 rounded-2xl shadow-xl space-y-6 text-center">
             <h1 className="text-3xl font-bold mb-4">Reading Questions</h1>
             {readingQuestions.map((q) => (
               <div key={q.id} className="space-y-2">
@@ -226,6 +222,7 @@ export const TestLofi = ({ studentEmail }) => {
                         value={opt}
                         checked={readingAnswers[q.id] === opt}
                         onChange={() => handleQuestionChange(q.id, opt)}
+                        className="accent-purple-500 focus:ring-purple-500"
                       />
                       <span>{opt}</span>
                     </label>
@@ -236,7 +233,7 @@ export const TestLofi = ({ studentEmail }) => {
             <div className="text-center">
               <button
                 onClick={handleProceedToMath}
-                className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+                className="cosmic-button disabled:opacity-50"
                 disabled={readingQuestions.some(q => !readingAnswers[q.id])}
               >
                 Proceed to Math
@@ -246,7 +243,7 @@ export const TestLofi = ({ studentEmail }) => {
         )}
 
         {stage === "math" && (
-          <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
+          <div className="bg-gray-800/80 border border-purple-600/50 p-8 rounded-2xl shadow-xl space-y-4 text-center">
             <h1 className="text-3xl font-bold mb-2">Math Problems</h1>
             <p>Answer each question. Press Enter after each answer. You cannot skip.</p>
             <p className="mt-2">
@@ -255,7 +252,7 @@ export const TestLofi = ({ studentEmail }) => {
             </p>
             <input
               type="number"
-              className="bg-gray-700/60 border border-gray-600 px-2 py-1 rounded w-full"
+              className="bg-gray-700/60 border border-purple-500 px-2 py-1 rounded-xl w-full focus:ring-2 focus:ring-purple-500"
               onKeyDown={handleMathAnswer}
               placeholder="Type answer and press Enter"
               autoFocus
@@ -264,7 +261,7 @@ export const TestLofi = ({ studentEmail }) => {
         )}
 
         {stage === "closing" && (
-          <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
+          <div className="bg-gray-800/80 border border-purple-600/50 p-8 rounded-2xl shadow-xl space-y-4 text-center">
             <h1 className="text-3xl font-bold">Congratulations!</h1>
             <p>
               You have completed all four tests. Thank you for your effort!
@@ -272,13 +269,12 @@ export const TestLofi = ({ studentEmail }) => {
             </p>
             <button
               onClick={() => navigate("/aftersurvey")}
-              className="bg-green-600 px-4 py-2 rounded hover:bg-green-700"
+              className="cosmic-button"
             >
               Proceed to Post-Survey
             </button>
           </div>
         )}
-
 
       </div>
     </div>

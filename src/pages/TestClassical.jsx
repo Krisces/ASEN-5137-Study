@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 export const TestClassical = ({ studentEmail }) => {
   const navigate = useNavigate();
-  const [stage, setStage] = useState("reading"); // reading, questions, math, closing
+  const [stage, setStage] = useState("reading"); 
   const [readingAnswers, setReadingAnswers] = useState({});
   const [currentMathIndex, setCurrentMathIndex] = useState(0);
   const [mathAnswers, setMathAnswers] = useState([]);
@@ -16,8 +16,8 @@ export const TestClassical = ({ studentEmail }) => {
   const mathTimerRef = useRef(null);
   const audioRef = useRef(new Audio("/audio/classical.mp3"));
 
-  const MAX_TIME_MS = 3 * 60 * 1000; // 3 minutes total
-  const MATH_TIME_MS = 1 * 60 * 1000; // 1 minute for math section
+  const MAX_TIME_MS = 3 * 60 * 1000;
+  const MATH_TIME_MS = 1 * 60 * 1000;
 
   const paragraph = `Classical music has a long history and has influenced many forms of art and culture. Composers like Mozart and Beethoven created works that are still widely performed today. The structure of classical compositions often includes symphonies, concertos, and sonatas, and the music is known for its emotional depth and technical precision. Listening to classical music has been associated with relaxation, focus, and enhanced cognitive performance.`;
 
@@ -43,7 +43,7 @@ export const TestClassical = ({ studentEmail }) => {
     { id: 41, a: 9, b: 6 }, { id: 42, a: 12, b: 13 }, { id: 43, a: 13, b: 7 }
   ];
 
-  // ---- TIMERS & AUDIO ----
+  // TIMERS & AUDIO
   useEffect(() => {
     startTimeRef.current = Date.now();
     readingStartTimeRef.current = Date.now();
@@ -73,7 +73,6 @@ export const TestClassical = ({ studentEmail }) => {
     }
   }, [stage]);
 
-  // ---- Handlers ----
   const handleQuestionChange = (id, value) =>
     setReadingAnswers({ ...readingAnswers, [id]: value });
 
@@ -85,37 +84,25 @@ export const TestClassical = ({ studentEmail }) => {
   const handleMathAnswer = (e) => {
     if (e.key === "Enter") {
       const value = e.target.value.trim();
-      if (value === "" || isNaN(Number(value))) {
-        alert("Please enter a valid number before proceeding.");
-        return;
-      }
-
+      if (!value || isNaN(Number(value))) return alert("Please enter a valid number.");
       const problem = mathProblems[currentMathIndex];
       const answerTime = Date.now() - mathQuestionStartTimeRef.current;
 
-      setMathAnswers([
-        ...mathAnswers,
-        { ...problem, answer: Number(value), timeMs: answerTime },
-      ]);
-
+      setMathAnswers(prev => [...prev, { ...problem, answer: Number(value), timeMs: answerTime }]);
       e.target.value = "";
       mathQuestionStartTimeRef.current = Date.now();
 
-      if (currentMathIndex + 1 < mathProblems.length) {
-        setCurrentMathIndex(currentMathIndex + 1);
-      } else {
-        setStage("closing");
-      }
+      if (currentMathIndex + 1 < mathProblems.length) setCurrentMathIndex(currentMathIndex + 1);
+      else setStage("closing");
     }
   };
 
-  // ---- Save results ----
+  // Save results (unchanged)
   useEffect(() => {
     if (stage === "closing") {
       const saveResults = async () => {
         const email = studentEmail || localStorage.getItem("studentEmail");
         if (!email) return;
-
         const totalTimeMs = Math.min(Date.now() - startTimeRef.current, MAX_TIME_MS);
         const readingTimeMs = readingTimeRef.current || 0;
 
@@ -124,19 +111,15 @@ export const TestClassical = ({ studentEmail }) => {
           testName: "Classical",
           questionType: "reading",
           questionId: q.id,
-          status: readingAnswers[q.id]
-            ? readingAnswers[q.id] === q.options[0] ? "right" : "wrong"
-            : "no_time",
+          status: readingAnswers[q.id] ? (readingAnswers[q.id] === q.options[0] ? "right" : "wrong") : "no_time",
           totalTimeMs,
           readingTimeMs,
         }));
 
-        // Mark unanswered math problems as no_time
-        const answeredIds = mathAnswers.map((m) => m.id);
-        const unanswered = mathProblems.filter((m) => !answeredIds.includes(m.id));
-
+        const answeredIds = mathAnswers.map(m => m.id);
+        const unanswered = mathProblems.filter(m => !answeredIds.includes(m.id));
         const mathResults = [
-          ...mathAnswers.map((m) => ({
+          ...mathAnswers.map(m => ({
             studentEmail: email.toLowerCase(),
             testName: "Classical",
             questionType: "math",
@@ -145,7 +128,7 @@ export const TestClassical = ({ studentEmail }) => {
             totalTimeMs,
             mathTimeMs: m.timeMs,
           })),
-          ...unanswered.map((m) => ({
+          ...unanswered.map(m => ({
             studentEmail: email.toLowerCase(),
             testName: "Classical",
             questionType: "math",
@@ -153,7 +136,7 @@ export const TestClassical = ({ studentEmail }) => {
             status: "no_time",
             totalTimeMs,
             mathTimeMs: 0,
-          })),
+          }))
         ];
 
         const allResults = [...readingResults, ...mathResults];
@@ -162,25 +145,16 @@ export const TestClassical = ({ studentEmail }) => {
           const res = await fetch("/api/saveTestResults", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              studentEmail: email,
-              testName: "Classical",
-              results: allResults,
-            }),
+            body: JSON.stringify({ studentEmail: email, testName: "Classical", results: allResults }),
           });
           const data = await res.json();
           if (!data.success) console.error("Error saving test results:", data);
-        } catch (err) {
-          console.error("Server error saving test results:", err);
-        }
+        } catch (err) { console.error("Server error saving test results:", err); }
 
         const currentTestId = 2;
         const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
-        if (completed < currentTestId) {
-          localStorage.setItem("completedTests", currentTestId.toString());
-        }
+        if (completed < currentTestId) localStorage.setItem("completedTests", currentTestId.toString());
       };
-
       saveResults();
     }
   }, [stage]);
@@ -191,30 +165,29 @@ export const TestClassical = ({ studentEmail }) => {
       <StarBackground />
       <div className="relative z-10 w-full max-w-3xl space-y-8">
 
+        {/* Reading */}
         {stage === "reading" && (
-          <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4">
+          <div className="bg-gray-800/80 border border-purple-600/50 p-8 rounded-2xl shadow-xl space-y-4">
             <h1 className="text-3xl font-bold text-center">Reading Comprehension</h1>
             <p className="text-center">Read the paragraph below carefully. You will answer questions afterward.</p>
             <p className="bg-gray-700/60 p-4 rounded text-left mt-2 mb-2">{paragraph}</p>
             <div className="text-center">
-              <button
-                onClick={() => setStage("questions")}
-                className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700"
-              >
+              <button onClick={() => setStage("questions")} className="cosmic-button mt-4 px-4 py-2">
                 Proceed to Questions
               </button>
             </div>
           </div>
         )}
 
+        {/* Questions */}
         {stage === "questions" && (
-          <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-6 text-center">
+          <div className="bg-gray-800/80 border border-purple-600/50 p-8 rounded-2xl shadow-xl space-y-6 text-center">
             <h1 className="text-3xl font-bold mb-4">Reading Questions</h1>
-            {readingQuestions.map((q) => (
+            {readingQuestions.map(q => (
               <div key={q.id} className="space-y-2">
                 <p className="text-center">{q.question}</p>
                 <div className="space-y-1 text-left mx-auto max-w-md">
-                  {q.options.map((opt) => (
+                  {q.options.map(opt => (
                     <label key={opt} className="flex items-center space-x-2">
                       <input
                         type="radio"
@@ -222,6 +195,7 @@ export const TestClassical = ({ studentEmail }) => {
                         value={opt}
                         checked={readingAnswers[q.id] === opt}
                         onChange={() => handleQuestionChange(q.id, opt)}
+                        className="accent-purple-500"
                       />
                       <span>{opt}</span>
                     </label>
@@ -232,8 +206,8 @@ export const TestClassical = ({ studentEmail }) => {
             <div className="text-center">
               <button
                 onClick={handleProceedToMath}
-                className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
                 disabled={readingQuestions.some(q => !readingAnswers[q.id])}
+                className="cosmic-button mt-4 w-full px-4 py-2 disabled:opacity-50"
               >
                 Proceed to Math
               </button>
@@ -241,17 +215,17 @@ export const TestClassical = ({ studentEmail }) => {
           </div>
         )}
 
+        {/* Math */}
         {stage === "math" && (
-          <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
+          <div className="bg-gray-800/80 border border-purple-600/50 p-8 rounded-2xl shadow-xl space-y-4 text-center">
             <h1 className="text-3xl font-bold mb-2">Math Problems</h1>
             <p>Answer each question. Press Enter after each answer. You cannot skip.</p>
             <p className="mt-2">
-              Problem {currentMathIndex + 1} of {mathProblems.length}:{" "}
-              {mathProblems[currentMathIndex].a} × {mathProblems[currentMathIndex].b} =
+              Problem {currentMathIndex + 1} of {mathProblems.length}: {mathProblems[currentMathIndex].a} × {mathProblems[currentMathIndex].b} =
             </p>
             <input
               type="number"
-              className="bg-gray-700/60 border border-gray-600 px-2 py-1 rounded w-full"
+              className="bg-gray-700/60 border border-purple-500 px-2 py-1 rounded w-full"
               onKeyDown={handleMathAnswer}
               placeholder="Type answer and press Enter"
               autoFocus
@@ -259,14 +233,12 @@ export const TestClassical = ({ studentEmail }) => {
           </div>
         )}
 
+        {/* Closing */}
         {stage === "closing" && (
-          <div className="bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-4 text-center">
+          <div className="bg-gray-800/80 border border-purple-600/50 p-8 rounded-2xl shadow-xl space-y-4 text-center">
             <h1 className="text-3xl font-bold">Test Complete</h1>
             <p>Great job! You have finished this test. Proceed to the next test when ready.</p>
-            <button
-              onClick={() => navigate("/studyhome")}
-              className="bg-green-600 px-4 py-2 rounded hover:bg-green-700"
-            >
+            <button onClick={() => navigate("/studyhome")} className="cosmic-button mt-4 px-4 py-2">
               Proceed to Next Test
             </button>
           </div>

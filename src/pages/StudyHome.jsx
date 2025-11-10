@@ -18,17 +18,14 @@ export const StudyHome = () => {
     const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
     setUnlockedTests(Math.min(completed + 1, tests.length));
 
-    // Track completed individually to disable retakes
     const completedList = [];
-    for (let i = 1; i <= completed; i++) {
-      completedList.push(i);
-    }
+    for (let i = 1; i <= completed; i++) completedList.push(i);
     setCompletedTests(completedList);
   }, []);
 
   const handleStartTest = (testId) => {
-    if (testId > unlockedTests) return; // not unlocked yet
-    if (completedTests.includes(testId)) return; // already done
+    if (testId > unlockedTests) return;
+    if (completedTests.includes(testId)) return;
 
     const routeMap = {
       1: "/testnomusic",
@@ -61,9 +58,9 @@ export const StudyHome = () => {
               <div
                 key={test.id}
                 onClick={() => handleStartTest(test.id)}
-                className={`bg-gray-800/80 p-6 rounded-lg shadow-lg flex flex-col justify-between h-full 
+                className={`bg-gray-800/80 border border-purple-600/50 p-6 rounded-2xl shadow-xl flex flex-col justify-between h-full
                   ${isUnlocked && !isCompleted
-                    ? "hover:bg-blue-700 cursor-pointer"
+                    ? "hover:border-purple-400 cursor-pointer"
                     : "opacity-50 cursor-not-allowed"
                   }`}
               >
@@ -75,9 +72,7 @@ export const StudyHome = () => {
                 {isCompleted ? (
                   <p className="mt-4 text-green-400 text-center font-semibold">Completed</p>
                 ) : isUnlocked ? (
-                  <button className="mt-4 bg-blue-600 px-4 py-2 rounded hover:bg-blue-950 w-full">
-                    Start
-                  </button>
+                  <button className="cosmic-button mt-4 w-full px-4 py-2">Start</button>
                 ) : (
                   <p className="mt-4 text-gray-500 text-center">Locked</p>
                 )}
