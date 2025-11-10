@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { StarBackground } from "../components/StarBackground";
 import { useNavigate } from "react-router-dom";
 
-// Simple cookie helpers
+// Cookie helpers
 const setCookie = (name, value, days) => {
   const expires = new Date(Date.now() + days * 864e5).toUTCString();
   document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
@@ -15,7 +15,7 @@ const getCookie = (name) => {
   }, "");
 };
 
-// Exception emails (lowercase)
+// Exception emails
 const EXCEPTION_EMAILS = [
   "kristin.boeckmann@colorado.edu",
   "alexander.cunningham@colorado.edu",
@@ -24,7 +24,7 @@ const EXCEPTION_EMAILS = [
   "alcu9870@colorado.edu",
   "zaba6688@colorado.edu",
   "joha2087@colorado.edu",
-].map(email => email.toLowerCase());
+].map((email) => email.toLowerCase());
 
 export const BeforeSurvey = () => {
   const navigate = useNavigate();
@@ -33,13 +33,15 @@ export const BeforeSurvey = () => {
     studentEmail: "",
     age: "",
     gender: "",
+    major: "",
+    isMusician: "",
+    musicalExperience: "",
     favoriteMusic: "",
     dailyMusicHours: "",
   });
 
   const [consentGiven, setConsentGiven] = useState(false);
 
-  // Check cookie and prevent re-taking
   useEffect(() => {
     const completed = getCookie("completedStudy");
     if (completed && !EXCEPTION_EMAILS.includes(completed)) {
@@ -67,11 +69,13 @@ export const BeforeSurvey = () => {
       return;
     }
 
-    // Only validate extra fields if NOT an exception
     if (!emailIsException) {
       if (
         !formData.age ||
         !formData.gender ||
+        !formData.major ||
+        !formData.isMusician ||
+        (formData.isMusician === "yes" && !formData.musicalExperience) ||
         !formData.favoriteMusic ||
         formData.dailyMusicHours === ""
       ) {
@@ -91,7 +95,6 @@ export const BeforeSurvey = () => {
     }
 
     try {
-      // reset progress
       localStorage.removeItem("completedTests");
       localStorage.setItem("completedTests", "0");
       localStorage.removeItem("studentEmail");
@@ -99,10 +102,10 @@ export const BeforeSurvey = () => {
       const res = await fetch("/api/survey", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, isException: emailIsException })
+        body: JSON.stringify({ ...formData, isException: emailIsException }),
       });
-      const data = await res.json();
 
+      const data = await res.json();
       if (data.success) {
         if (!emailIsException) setCookie("completedStudy", email, 30);
         localStorage.setItem("studentEmail", email);
@@ -114,7 +117,6 @@ export const BeforeSurvey = () => {
       console.error(err);
       alert("Server error. Try again later.");
     }
-
   };
 
   return (
@@ -151,7 +153,6 @@ export const BeforeSurvey = () => {
           />
         </div>
 
-        {/* Only show other fields & consent if NOT an exception */}
         {!EXCEPTION_EMAILS.includes(formData.studentEmail.trim().toLowerCase()) && (
           <>
             <div>
@@ -191,6 +192,58 @@ export const BeforeSurvey = () => {
             </div>
 
             <div>
+              <label htmlFor="major" className="block mb-2 font-medium">
+                Major
+              </label>
+              <input
+                type="text"
+                id="major"
+                name="major"
+                value={formData.major}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Aerospace Engineering, Psychology, etc."
+              />
+            </div>
+
+            <div>
+              <label htmlFor="isMusician" className="block mb-2 font-medium">
+                Are you a musician?
+              </label>
+              <select
+                id="isMusician"
+                name="isMusician"
+                value={formData.isMusician}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+
+            {formData.isMusician === "yes" && (
+              <div>
+                <label htmlFor="musicalExperience" className="block mb-2 font-medium">
+                  How much musical experience do you have?
+                </label>
+                <input
+                  type="text"
+                  id="musicalExperience"
+                  name="musicalExperience"
+                  value={formData.musicalExperience}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., 5 years of piano, music major, etc."
+                />
+              </div>
+            )}
+
+            <div>
               <label htmlFor="favoriteMusic" className="block mb-2 font-medium">
                 Favorite type of music
               </label>
@@ -223,7 +276,6 @@ export const BeforeSurvey = () => {
               />
             </div>
 
-            {/* Consent checkbox */}
             <div className="flex items-center space-x-2">
               <input
                 type="checkbox"
@@ -245,10 +297,11 @@ export const BeforeSurvey = () => {
             !EXCEPTION_EMAILS.includes(formData.studentEmail.trim().toLowerCase()) &&
             !consentGiven
           }
-          className={`w-full py-3 rounded-md font-semibold transition-colors ${EXCEPTION_EMAILS.includes(formData.studentEmail.trim().toLowerCase()) || consentGiven
+          className={`w-full py-3 rounded-md font-semibold transition-colors ${
+            EXCEPTION_EMAILS.includes(formData.studentEmail.trim().toLowerCase()) || consentGiven
               ? "bg-blue-600 hover:bg-blue-700 text-white"
               : "bg-gray-600 text-gray-300 cursor-not-allowed"
-            }`}
+          }`}
         >
           Familiarize Yourself With the Tests
         </button>
