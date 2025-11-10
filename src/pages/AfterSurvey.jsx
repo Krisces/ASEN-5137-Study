@@ -38,7 +38,6 @@ export const AfterSurvey = () => {
       return;
     }
 
-    // Prepare knownSongs array: include all songs, set NULL for unknown/familiarity
     const knownSongs = Object.entries(selectedSongs).map(([song, val]) => ({
       song,
       familiarity: val.known ? val.familiarity : null,
@@ -49,10 +48,7 @@ export const AfterSurvey = () => {
       const res = await fetch("/api/postSurvey", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          studentEmail,
-          knownSongs,
-        }),
+        body: JSON.stringify({ studentEmail, knownSongs }),
       });
 
       const data = await res.json();
@@ -72,32 +68,39 @@ export const AfterSurvey = () => {
     <div className="relative min-h-screen flex flex-col items-center bg-black text-white px-4 pb-20 pt-20">
       <StarBackground />
 
+      {/* Congratulatory text outside form */}
       <div className="z-10 w-full max-w-3xl text-center mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold mb-2">Post Survey:</h1>
-        <p className="text-gray-300 text-lg mb-1">- Did you know any of the songs?</p>
-        <p className="text-gray-300 text-lg mb-1">- Which ones did you know?</p>
-        <p className="text-gray-300 text-lg">- How well do you know the songs? (Scale)</p>
+        <h1 className="text-3xl md:text-4xl font-bold mb-4">Congratulations!</h1>
+        <p className="text-gray-300 text-lg">
+          You’ve completed all the tests. Lastly, please fill out this short post-survey.
+        </p>
       </div>
 
+      {/* Form card */}
       <form
         onSubmit={handleSubmit}
         className="z-10 w-full max-w-xl bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-6"
       >
+        {/* Instructions inside card */}
+        <p className="text-gray-300 mb-4">
+          For each song below, indicate which ones you know and how familiar you are with them (0 = not at all, 10 = very well).
+        </p>
+
         {songOptions.map((song) => (
-          <div key={song}>
+          <div key={song} className="bg-gray-700 p-4 rounded-md space-y-2">
             <label className="flex items-center space-x-2">
               <input
                 type="checkbox"
                 checked={selectedSongs[song].known}
                 onChange={() => handleCheckboxChange(song)}
               />
-              <span>{song}</span>
+              <span className="font-medium">{song}</span>
             </label>
 
             {selectedSongs[song].known && (
               <div className="mt-2">
                 <label className="block mb-1 text-sm">
-                  Familiarity with {song} (0 = not at all, 10 = very well)
+                  Familiarity with {song}:
                 </label>
                 <input
                   type="range"
@@ -109,7 +112,7 @@ export const AfterSurvey = () => {
                   className="w-full"
                 />
                 <p className="text-gray-400 text-sm mt-1">
-                  Familiarity: {selectedSongs[song].familiarity}/10
+                  {selectedSongs[song].familiarity}/10
                 </p>
               </div>
             )}
