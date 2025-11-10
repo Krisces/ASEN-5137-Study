@@ -7,7 +7,7 @@ export const AfterSurvey = () => {
 
   const songOptions = ["Classical Song", "Rock Song", "Lofi Song"];
 
-  // Store which songs are selected + their familiarity score
+  // Track whether each song is known + its familiarity
   const [selectedSongs, setSelectedSongs] = useState(
     songOptions.reduce((acc, song) => {
       acc[song] = { known: false, familiarity: 0 };
@@ -38,15 +38,12 @@ export const AfterSurvey = () => {
       return;
     }
 
-    // Collect only songs they know
-    const knownSongs = Object.entries(selectedSongs)
-      .filter(([_, val]) => val.known)
-      .map(([song, val]) => ({ song, familiarity: val.familiarity }));
-
-    if (knownSongs.length === 0) {
-      alert("Please select at least one song you know.");
-      return;
-    }
+    // Prepare knownSongs array: include all songs, set NULL for unknown/familiarity
+    const knownSongs = Object.entries(selectedSongs).map(([song, val]) => ({
+      song,
+      familiarity: val.known ? val.familiarity : null,
+      known: val.known ? "yes" : "no",
+    }));
 
     try {
       const res = await fetch("/api/postSurvey", {
@@ -76,10 +73,10 @@ export const AfterSurvey = () => {
       <StarBackground />
 
       <div className="z-10 w-full max-w-3xl text-center mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold mb-4">Congratulations!</h1>
-        <p className="text-gray-300 text-lg">
-          You’ve finished all four tests. Please complete this short post-survey to wrap up the study.
-        </p>
+        <h1 className="text-3xl md:text-4xl font-bold mb-2">Post Survey:</h1>
+        <p className="text-gray-300 text-lg mb-1">- Did you know any of the songs?</p>
+        <p className="text-gray-300 text-lg mb-1">- Which ones did you know?</p>
+        <p className="text-gray-300 text-lg">- How well do you know the songs? (Scale)</p>
       </div>
 
       <form
@@ -99,7 +96,9 @@ export const AfterSurvey = () => {
 
             {selectedSongs[song].known && (
               <div className="mt-2">
-                <label className="block mb-1 text-sm">Familiarity with {song} (0 = not at all, 10 = very well)</label>
+                <label className="block mb-1 text-sm">
+                  Familiarity with {song} (0 = not at all, 10 = very well)
+                </label>
                 <input
                   type="range"
                   min="0"
