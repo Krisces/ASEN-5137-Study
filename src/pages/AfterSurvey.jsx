@@ -1,13 +1,10 @@
 import { useState } from "react";
 import { StarBackground } from "../components/StarBackground";
-import { useNavigate } from "react-router-dom";
 
 export const AfterSurvey = () => {
-  const navigate = useNavigate();
+  const [stage, setStage] = useState("form"); // form, thankYou
 
   const songOptions = ["Classical Song", "Rock Song", "Lofi Song"];
-
-  // Track whether each song is known + its familiarity
   const [selectedSongs, setSelectedSongs] = useState(
     songOptions.reduce((acc, song) => {
       acc[song] = { known: false, familiarity: 0 };
@@ -53,8 +50,7 @@ export const AfterSurvey = () => {
 
       const data = await res.json();
       if (data.success) {
-        alert("Thank you for completing the post-survey!");
-        navigate("/thank-you");
+        setStage("thankYou"); // switch stage instead of navigating
       } else {
         alert("Error saving your responses. Please try again.");
       }
@@ -68,7 +64,6 @@ export const AfterSurvey = () => {
     <div className="relative min-h-screen flex flex-col items-center bg-black text-white px-4 pb-20 pt-20">
       <StarBackground />
 
-      {/* Congratulatory text outside form */}
       <div className="z-10 w-full max-w-3xl text-center mb-8">
         <h1 className="text-3xl md:text-4xl font-bold mb-4">Congratulations!</h1>
         <p className="text-gray-300 text-lg">
@@ -76,56 +71,68 @@ export const AfterSurvey = () => {
         </p>
       </div>
 
-      {/* Form card */}
-      <form
-        onSubmit={handleSubmit}
-        className="z-10 w-full max-w-xl bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-6"
-      >
-        {/* Instructions inside card */}
-        <p className="text-gray-300 mb-4">
-          For each song below, indicate which ones you know and how familiar you are with them (0 = not at all, 10 = very well).
-        </p>
-
-        {songOptions.map((song) => (
-          <div key={song} className="bg-gray-700 p-4 rounded-md space-y-2">
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={selectedSongs[song].known}
-                onChange={() => handleCheckboxChange(song)}
-              />
-              <span className="font-medium">{song}</span>
-            </label>
-
-            {selectedSongs[song].known && (
-              <div className="mt-2">
-                <label className="block mb-1 text-sm">
-                  Familiarity with {song}:
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="10"
-                  step="1"
-                  value={selectedSongs[song].familiarity}
-                  onChange={(e) => handleSliderChange(song, e.target.value)}
-                  className="w-full"
-                />
-                <p className="text-gray-400 text-sm mt-1">
-                  {selectedSongs[song].familiarity}/10
-                </p>
-              </div>
-            )}
-          </div>
-        ))}
-
-        <button
-          type="submit"
-          className="w-full py-3 rounded-md font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+      {stage === "form" && (
+        <form
+          onSubmit={handleSubmit}
+          className="z-10 w-full max-w-xl bg-gray-800/80 p-8 rounded-lg shadow-lg space-y-6"
         >
-          Submit Post-Survey
-        </button>
-      </form>
+          <p className="text-gray-300 mb-4">
+            For each song below, indicate which ones you know and how familiar you are with them (0 = not at all, 10 = very well).
+          </p>
+
+          {songOptions.map((song) => (
+            <div key={song} className="bg-gray-700 p-4 rounded-md space-y-2">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={selectedSongs[song].known}
+                  onChange={() => handleCheckboxChange(song)}
+                />
+                <span className="font-medium">{song}</span>
+              </label>
+
+              {selectedSongs[song].known && (
+                <div className="mt-2">
+                  <label className="block mb-1 text-sm">
+                    Familiarity with {song}:
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="10"
+                    step="1"
+                    value={selectedSongs[song].familiarity}
+                    onChange={(e) => handleSliderChange(song, e.target.value)}
+                    className="w-full"
+                  />
+                  <p className="text-gray-400 text-sm mt-1">
+                    {selectedSongs[song].familiarity}/10
+                  </p>
+                </div>
+              )}
+            </div>
+          ))}
+
+          <button
+            type="submit"
+            className="w-full py-3 rounded-md font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+          >
+            Submit Post-Survey
+          </button>
+        </form>
+      )}
+
+      {stage === "thankYou" && (
+        <div className="z-10 w-full max-w-xl bg-gray-800/80 p-8 rounded-lg shadow-lg text-center space-y-6">
+          <h2 className="text-3xl font-bold">Thank You!</h2>
+          <p className="text-gray-300">
+            Your responses have been recorded. We appreciate your participation in the study.
+          </p>
+          <p className="text-gray-300">
+            You may now close this page.
+          </p>
+        </div>
+      )}
     </div>
   );
 };
