@@ -21,26 +21,81 @@ export const TestLofi = ({ studentEmail }) => {
 
   const paragraph = `Lofi beats are characterized by soft, relaxing rhythms often used for studying or relaxation. They feature mellow melodies, light percussion, and a generally calm atmosphere. Many people use lofi music as a background while reading, writing, or focusing on tasks. Listening to lofi can help reduce stress and improve concentration.`;
 
+  // --- FIXED: added correct answers explicitly ---
   const readingQuestions = [
-    { id: 1, question: "What is lofi music commonly used for?", options: ["Studying, relaxing, or focusing", "Dancing at parties", "Live concerts", "Film soundtracks"] },
-    { id: 2, question: "What are characteristics of lofi beats?", options: ["Mellow melodies and calm atmosphere", "Heavy metal guitar riffs", "Fast-paced electronic rhythms", "Orchestral arrangements"] },
-    { id: 3, question: "Lofi music helps improve what?", options: ["Concentration", "Physical strength", "Running speed", "Mathematics skills"] },
-    { id: 4, question: "What instruments are common in lofi?", options: ["Light percussion and mellow melodies", "Electric guitar and drums", "Synthesizers only", "Brass and woodwinds"] },
-    { id: 5, question: "Lofi music creates what kind of atmosphere?", options: ["Calm and relaxing", "Chaotic and loud", "Intense and fast", "Sad and gloomy"] },
+    {
+      id: 1,
+      question: "What is lofi music commonly used for?",
+      options: [
+        "Dancing at parties",
+        "Studying, relaxing, or focusing",
+        "Live concerts",
+        "Film soundtracks",
+      ],
+      correct: "Studying, relaxing, or focusing",
+    },
+    {
+      id: 2,
+      question: "What are characteristics of lofi beats?",
+      options: [
+        "Heavy metal guitar riffs",
+        "Fast-paced electronic rhythms",
+        "Mellow melodies and calm atmosphere",
+        "Orchestral arrangements",
+      ],
+      correct: "Mellow melodies and calm atmosphere",
+    },
+    {
+      id: 3,
+      question: "Lofi music helps improve what?",
+      options: [
+        "Physical strength",
+        "Running speed",
+        "Concentration",
+        "Mathematics skills",
+      ],
+      correct: "Concentration",
+    },
+    {
+      id: 4,
+      question: "What instruments are common in lofi?",
+      options: [
+        "Electric guitar and drums",
+        "Synthesizers only",
+        "Light percussion and mellow melodies",
+        "Brass and woodwinds",
+      ],
+      correct: "Light percussion and mellow melodies",
+    },
+    {
+      id: 5,
+      question: "Lofi music creates what kind of atmosphere?",
+      options: [
+        "Chaotic and loud",
+        "Calm and relaxing",
+        "Intense and fast",
+        "Sad and gloomy",
+      ],
+      correct: "Calm and relaxing",
+    },
   ];
 
   const mathProblems = [
-    { id: 1, a: 1, b: 4 }, { id: 2, a: 1, b: 13 }, { id: 3, a: 2, b: 2 }, { id: 4, a: 2, b: 10 },
-    { id: 5, a: 3, b: 1 }, { id: 6, a: 3, b: 3 }, { id: 7, a: 4, b: 1 }, { id: 8, a: 4, b: 9 },
-    { id: 9, a: 5, b: 4 }, { id: 10, a: 5, b: 7 }, { id: 11, a: 6, b: 4 }, { id: 12, a: 6, b: 12 },
-    { id: 13, a: 7, b: 7 }, { id: 14, a: 7, b: 13 }, { id: 15, a: 8, b: 2 }, { id: 16, a: 8, b: 11 },
-    { id: 17, a: 9, b: 1 }, { id: 18, a: 9, b: 10 }, { id: 19, a: 10, b: 3 }, { id: 20, a: 10, b: 9 },
-    { id: 21, a: 11, b: 4 }, { id: 22, a: 11, b: 13 }, { id: 23, a: 12, b: 1 }, { id: 24, a: 12, b: 9 },
-    { id: 25, a: 13, b: 3 }, { id: 26, a: 13, b: 13 }, { id: 27, a: 2, b: 7 }, { id: 28, a: 3, b: 11 },
-    { id: 29, a: 4, b: 4 }, { id: 30, a: 5, b: 6 }, { id: 31, a: 6, b: 6 }, { id: 32, a: 7, b: 11 },
-    { id: 33, a: 8, b: 8 }, { id: 34, a: 9, b: 11 }, { id: 35, a: 10, b: 6 }, { id: 36, a: 11, b: 6 },
-    { id: 37, a: 12, b: 10 }, { id: 38, a: 13, b: 9 }, { id: 39, a: 3, b: 10 }, { id: 40, a: 7, b: 9 },
-    { id: 41, a: 9, b: 8 }, { id: 42, a: 12, b: 13 }, { id: 43, a: 13, b: 4 },
+    { id: 1, a: 1, b: 4 }, { id: 2, a: 1, b: 13 }, { id: 3, a: 2, b: 2 },
+    { id: 4, a: 2, b: 10 }, { id: 5, a: 3, b: 1 }, { id: 6, a: 3, b: 3 },
+    { id: 7, a: 4, b: 1 }, { id: 8, a: 4, b: 9 }, { id: 9, a: 5, b: 4 },
+    { id: 10, a: 5, b: 7 }, { id: 11, a: 6, b: 4 }, { id: 12, a: 6, b: 12 },
+    { id: 13, a: 7, b: 7 }, { id: 14, a: 7, b: 13 }, { id: 15, a: 8, b: 2 },
+    { id: 16, a: 8, b: 11 }, { id: 17, a: 9, b: 1 }, { id: 18, a: 9, b: 10 },
+    { id: 19, a: 10, b: 3 }, { id: 20, a: 10, b: 9 }, { id: 21, a: 11, b: 4 },
+    { id: 22, a: 11, b: 13 }, { id: 23, a: 12, b: 1 }, { id: 24, a: 12, b: 9 },
+    { id: 25, a: 13, b: 3 }, { id: 26, a: 13, b: 13 }, { id: 27, a: 2, b: 7 },
+    { id: 28, a: 3, b: 11 }, { id: 29, a: 4, b: 4 }, { id: 30, a: 5, b: 6 },
+    { id: 31, a: 6, b: 6 }, { id: 32, a: 7, b: 11 }, { id: 33, a: 8, b: 8 },
+    { id: 34, a: 9, b: 11 }, { id: 35, a: 10, b: 6 }, { id: 36, a: 11, b: 6 },
+    { id: 37, a: 12, b: 10 }, { id: 38, a: 13, b: 9 }, { id: 39, a: 3, b: 10 },
+    { id: 40, a: 7, b: 9 }, { id: 41, a: 9, b: 8 }, { id: 42, a: 12, b: 13 },
+    { id: 43, a: 13, b: 4 },
   ];
 
   // ---- TIMERS & AUDIO ----
@@ -125,7 +180,7 @@ export const TestLofi = ({ studentEmail }) => {
           questionType: "reading",
           questionId: q.id,
           status: readingAnswers[q.id]
-            ? readingAnswers[q.id] === q.options[0] ? "right" : "wrong"
+            ? readingAnswers[q.id] === q.correct ? "right" : "wrong"
             : "no_time",
           totalTimeMs,
           readingTimeMs,

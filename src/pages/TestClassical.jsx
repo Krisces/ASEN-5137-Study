@@ -22,11 +22,36 @@ export const TestClassical = ({ studentEmail }) => {
   const paragraph = `Classical music has a long history and has influenced many forms of art and culture. Composers like Mozart and Beethoven created works that are still widely performed today. The structure of classical compositions often includes symphonies, concertos, and sonatas, and the music is known for its emotional depth and technical precision. Listening to classical music has been associated with relaxation, focus, and enhanced cognitive performance.`;
 
   const readingQuestions = [
-    { id: 1, question: "Which composers are mentioned as examples of classical music?", options: ["Mozart and Beethoven", "Bach and Chopin", "Elvis and Sinatra", "John Williams and Hans Zimmer"] },
-    { id: 2, question: "What is classical music known for?", options: ["Emotional depth and technical precision", "Loud beats and bass", "Improvised solos", "Random sound effects"] },
-    { id: 3, question: "What types of compositions are commonly found in classical music?", options: ["Symphonies, concertos, sonatas", "Rock albums", "Jazz improvisations", "Electronic tracks"] },
-    { id: 4, question: "What benefit is associated with listening to classical music?", options: ["Relaxation and focus", "Weight loss", "Faster running", "Improved vision"] },
-    { id: 5, question: "Are classical works still performed today?", options: ["Yes", "No", "Rarely", "Only in schools"] },
+    {
+      id: 1,
+      question: "Which composers are mentioned as examples of classical music?",
+      options: ["Mozart and Beethoven", "Bach and Chopin", "Elvis and Sinatra", "John Williams and Hans Zimmer"],
+      correct: "Mozart and Beethoven"
+    },
+    {
+      id: 2,
+      question: "What is classical music known for?",
+      options: ["Emotional depth and technical precision", "Loud beats and bass", "Improvised solos", "Random sound effects"],
+      correct: "Emotional depth and technical precision"
+    },
+    {
+      id: 3,
+      question: "What types of compositions are commonly found in classical music?",
+      options: ["Symphonies, concertos, sonatas", "Rock albums", "Jazz improvisations", "Electronic tracks"],
+      correct: "Symphonies, concertos, sonatas"
+    },
+    {
+      id: 4,
+      question: "What benefit is associated with listening to classical music?",
+      options: ["Relaxation and focus", "Weight loss", "Faster running", "Improved vision"],
+      correct: "Relaxation and focus"
+    },
+    {
+      id: 5,
+      question: "Are classical works still performed today?",
+      options: ["Yes", "No", "Rarely", "Only in schools"],
+      correct: "Yes"
+    }
   ];
 
   const mathProblems = [
@@ -97,7 +122,7 @@ export const TestClassical = ({ studentEmail }) => {
     }
   };
 
-  // Save results (unchanged)
+  // Save results
   useEffect(() => {
     if (stage === "closing") {
       const saveResults = async () => {
@@ -111,7 +136,11 @@ export const TestClassical = ({ studentEmail }) => {
           testName: "Classical",
           questionType: "reading",
           questionId: q.id,
-          status: readingAnswers[q.id] ? (readingAnswers[q.id] === q.options[0] ? "right" : "wrong") : "no_time",
+          status: readingAnswers[q.id]
+            ? readingAnswers[q.id] === q.correct
+              ? "right"
+              : "wrong"
+            : "no_time",
           totalTimeMs,
           readingTimeMs,
         }));
@@ -159,13 +188,11 @@ export const TestClassical = ({ studentEmail }) => {
     }
   }, [stage]);
 
-  // ---- Render ----
   return (
     <div className="relative min-h-screen bg-black text-white px-4 py-12 flex flex-col items-center">
       <StarBackground />
       <div className="relative z-10 w-full max-w-3xl space-y-8">
 
-        {/* Reading */}
         {stage === "reading" && (
           <div className="bg-gray-800/80 border border-purple-600/50 p-8 rounded-2xl shadow-xl space-y-4">
             <h1 className="text-3xl font-bold text-center">Reading Comprehension</h1>
@@ -179,7 +206,6 @@ export const TestClassical = ({ studentEmail }) => {
           </div>
         )}
 
-        {/* Questions */}
         {stage === "questions" && (
           <div className="bg-gray-800/80 border border-purple-600/50 p-8 rounded-2xl shadow-xl space-y-6 text-center">
             <h1 className="text-3xl font-bold mb-4">Reading Questions</h1>
@@ -215,7 +241,6 @@ export const TestClassical = ({ studentEmail }) => {
           </div>
         )}
 
-        {/* Math */}
         {stage === "math" && (
           <div className="bg-gray-800/80 border border-purple-600/50 p-8 rounded-2xl shadow-xl space-y-4 text-center">
             <h1 className="text-3xl font-bold mb-2">Math Problems</h1>
@@ -233,7 +258,6 @@ export const TestClassical = ({ studentEmail }) => {
           </div>
         )}
 
-        {/* Closing */}
         {stage === "closing" && (
           <div className="bg-gray-800/80 border border-purple-600/50 p-8 rounded-2xl shadow-xl space-y-4 text-center">
             <h1 className="text-3xl font-bold">Test Complete</h1>

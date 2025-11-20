@@ -34,11 +34,36 @@ export const TestNoMusic = ({ studentEmail }) => {
   const paragraph = `Bees are essential pollinators in many ecosystems, helping plants reproduce by transferring pollen from flower to flower. They communicate using dances to indicate food sources to other bees in the hive. A single bee can visit hundreds of flowers in a day, collecting nectar and pollen to support its colony, while also contributing to the growth of fruits and vegetables. The health of bee populations directly impacts the success of many crops humans rely on. Conserving habitats and reducing pesticide use are key to protecting bees and maintaining balanced ecosystems.`;
 
   const readingQuestions = [
-    { id: 1, question: "What is the main role of bees in ecosystems?", options: ["Pollination", "Hibernation", "Migration", "Photosynthesis"] },
-    { id: 2, question: "How do bees communicate about food sources?", options: ["Dancing", "Singing", "Changing color", "Making patterns"] },
-    { id: 3, question: "What happens when bee populations decline?", options: ["Crop yields can drop", "Bees become stronger", "Flowers stop growing", "Honey disappears"] },
-    { id: 4, question: "What can help protect bees?", options: ["Reducing pesticide use", "Using more chemicals", "Capturing wild bees", "Planting fewer flowers"] },
-    { id: 5, question: "What do bees collect from flowers?", options: ["Nectar and pollen", "Seeds and roots", "Leaves and bark", "Water and soil"] },
+    {
+      id: 1,
+      question: "What is the main role of bees in ecosystems?",
+      options: ["Pollination", "Hibernation", "Migration", "Photosynthesis"],
+      correct: "Pollination"
+    },
+    {
+      id: 2,
+      question: "How do bees communicate about food sources?",
+      options: ["Dancing", "Singing", "Changing color", "Making patterns"],
+      correct: "Dancing"
+    },
+    {
+      id: 3,
+      question: "What happens when bee populations decline?",
+      options: ["Crop yields can drop", "Bees become stronger", "Flowers stop growing", "Honey disappears"],
+      correct: "Crop yields can drop"
+    },
+    {
+      id: 4,
+      question: "What can help protect bees?",
+      options: ["Reducing pesticide use", "Using more chemicals", "Capturing wild bees", "Planting fewer flowers"],
+      correct: "Reducing pesticide use"
+    },
+    {
+      id: 5,
+      question: "What do bees collect from flowers?",
+      options: ["Nectar and pollen", "Seeds and roots", "Leaves and bark", "Water and soil"],
+      correct: "Nectar and pollen"
+    }
   ];
 
   useEffect(() => {
@@ -61,7 +86,9 @@ export const TestNoMusic = ({ studentEmail }) => {
     return () => clearTimeout(mathTimer);
   }, [stage]);
 
-  const handleQuestionChange = (id, value) => setReadingAnswers({ ...readingAnswers, [id]: value });
+  const handleQuestionChange = (id, value) =>
+    setReadingAnswers({ ...readingAnswers, [id]: value });
+
   const handleProceedToMath = () => {
     readingTimeRef.current = Date.now() - readingStartTimeRef.current;
     setStage("math");
@@ -71,55 +98,96 @@ export const TestNoMusic = ({ studentEmail }) => {
     if (e.key === "Enter") {
       const value = e.target.value.trim();
       if (!value || isNaN(Number(value))) return alert("Please enter a valid number.");
+
       const problem = mathProblems[currentMathIndex];
       const answerTime = Date.now() - mathQuestionStartTimeRef.current;
-      setMathAnswers(prev => [...prev, { ...problem, answer: Number(value), timeMs: answerTime }]);
+
+      setMathAnswers(prev => [
+        ...prev,
+        { ...problem, answer: Number(value), timeMs: answerTime }
+      ]);
+
       e.target.value = "";
       mathQuestionStartTimeRef.current = Date.now();
-      if (currentMathIndex + 1 < mathProblems.length) setCurrentMathIndex(currentMathIndex + 1);
-      else setStage("closing");
+
+      if (currentMathIndex + 1 < mathProblems.length)
+        setCurrentMathIndex(currentMathIndex + 1);
+      else
+        setStage("closing");
     }
   };
 
-  // ---- Save results (unchanged) ----
+  // ---- Save results ----
   useEffect(() => {
     if (stage === "closing") {
       const saveResults = async () => {
         const email = studentEmail || localStorage.getItem("studentEmail");
         if (!email) return;
+
         const totalTimeMs = Math.min(Date.now() - startTimeRef.current, MAX_TIME_MS);
         const readingTimeMs = readingTimeRef.current || 0;
+
         const readingResults = readingQuestions.map(q => ({
           studentEmail: email.toLowerCase(),
           testName: "NoMusic",
           questionType: "reading",
           questionId: q.id,
-          status: readingAnswers[q.id] ? (readingAnswers[q.id] === q.options[0] ? "right" : "wrong") : "no_time",
+          status: readingAnswers[q.id]
+            ? (readingAnswers[q.id] === q.correct ? "right" : "wrong")
+            : "no_time",
           totalTimeMs,
           readingTimeMs,
         }));
+
         const mathResults = mathProblems.map(problem => {
           const answered = mathAnswers.find(a => a.id === problem.id);
           return answered
-            ? { studentEmail: email.toLowerCase(), testName: "NoMusic", questionType: "math", questionId: problem.id, status: answered.answer === problem.a * problem.b ? "right" : "wrong", totalTimeMs, mathTimeMs: answered.timeMs }
-            : { studentEmail: email.toLowerCase(), testName: "NoMusic", questionType: "math", questionId: problem.id, status: "no_time", totalTimeMs, mathTimeMs: null };
+            ? {
+                studentEmail: email.toLowerCase(),
+                testName: "NoMusic",
+                questionType: "math",
+                questionId: problem.id,
+                status:
+                  answered.answer === problem.a * problem.b ? "right" : "wrong",
+                totalTimeMs,
+                mathTimeMs: answered.timeMs
+              }
+            : {
+                studentEmail: email.toLowerCase(),
+                testName: "NoMusic",
+                questionType: "math",
+                questionId: problem.id,
+                status: "no_time",
+                totalTimeMs,
+                mathTimeMs: null
+              };
         });
+
         const allResults = [...readingResults, ...mathResults];
 
         try {
           const res = await fetch("/api/saveTestResults", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ studentEmail: email, testName: "NoMusic", results: allResults }),
+            body: JSON.stringify({
+              studentEmail: email,
+              testName: "NoMusic",
+              results: allResults
+            }),
           });
+
           const data = await res.json();
           if (!data.success) console.error("Error saving test results:", data);
-        } catch (err) { console.error("Server error saving test results:", err); }
+        } catch (err) {
+          console.error("Server error saving test results:", err);
+        }
 
         const currentTestId = 1;
         const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
-        if (completed < currentTestId) localStorage.setItem("completedTests", currentTestId.toString());
+        if (completed < currentTestId)
+          localStorage.setItem("completedTests", currentTestId.toString());
       };
+
       saveResults();
     }
   }, [stage]);
@@ -136,7 +204,12 @@ export const TestNoMusic = ({ studentEmail }) => {
             <p className="text-center">Read the paragraph below carefully. You will answer questions afterward.</p>
             <p className="bg-gray-700/60 p-4 rounded text-left mt-2 mb-2">{paragraph}</p>
             <div className="text-center">
-              <button onClick={() => setStage("questions")} className="cosmic-button mt-4 px-4 py-2">Proceed to Questions</button>
+              <button
+                onClick={() => setStage("questions")}
+                className="cosmic-button mt-4 px-4 py-2"
+              >
+                Proceed to Questions
+              </button>
             </div>
           </div>
         )}
@@ -183,7 +256,8 @@ export const TestNoMusic = ({ studentEmail }) => {
             <h1 className="text-3xl font-bold mb-2">Math Problems</h1>
             <p>Answer each question. Press Enter after each answer. You cannot skip.</p>
             <p className="mt-2">
-              Problem {currentMathIndex + 1} of {mathProblems.length}: {mathProblems[currentMathIndex].a} × {mathProblems[currentMathIndex].b} =
+              Problem {currentMathIndex + 1} of {mathProblems.length}:{" "}
+              {mathProblems[currentMathIndex].a} × {mathProblems[currentMathIndex].b} =
             </p>
             <input
               type="number"
@@ -200,7 +274,10 @@ export const TestNoMusic = ({ studentEmail }) => {
           <div className="bg-gray-800/80 border border-purple-600/50 p-8 rounded-2xl shadow-xl space-y-4 text-center">
             <h1 className="text-3xl font-bold">Test Complete</h1>
             <p>Great job! You have finished this test. Proceed to the next test when ready.</p>
-            <button onClick={() => navigate("/studyhome")} className="cosmic-button mt-4 px-4 py-2">
+            <button
+              onClick={() => navigate("/studyhome")}
+              className="cosmic-button mt-4 px-4 py-2"
+            >
               Proceed to Next Test
             </button>
           </div>

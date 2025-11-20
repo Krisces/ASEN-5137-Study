@@ -22,11 +22,46 @@ export const TestRock = ({ studentEmail }) => {
   const paragraph = `Rock music from the 70s and 80s has shaped popular culture and influenced generations of musicians. Bands like Queen, Led Zeppelin, and The Rolling Stones created iconic songs that remain popular today. Rock music often features strong guitar riffs, memorable melodies, and energetic rhythms. Listening to rock music can energize listeners and evoke feelings of excitement and nostalgia.`;
 
   const readingQuestions = [
-    { id: 1, question: "Which bands are mentioned in the paragraph?", options: ["Queen, Led Zeppelin, The Rolling Stones", "Nirvana, Pearl Jam, Metallica", "The Beatles, Oasis, Blur", "Coldplay, U2, Radiohead"] },
-    { id: 2, question: "What are characteristics of 70s/80s rock music?", options: ["Strong guitar riffs and energetic rhythms", "Slow melodies and soft vocals", "Electronic beats and synths", "Jazz improvisation and swing"] },
-    { id: 3, question: "Listening to rock music can evoke what?", options: ["Excitement and nostalgia", "Hunger", "Sleepiness", "Anxiety"] },
-    { id: 4, question: "Are songs from these bands still popular today?", options: ["Yes", "No", "Only in movies", "Only on radio"] },
-    { id: 5, question: "Which era of rock music is discussed?", options: ["70s and 80s", "60s", "90s", "2000s"] },
+    { 
+      id: 1, 
+      question: "Which bands are mentioned in the paragraph?", 
+      options: [
+        "Queen, Led Zeppelin, The Rolling Stones", 
+        "Nirvana, Pearl Jam, Metallica", 
+        "The Beatles, Oasis, Blur", 
+        "Coldplay, U2, Radiohead"
+      ],
+      correctAnswer: "Queen, Led Zeppelin, The Rolling Stones"
+    },
+    { 
+      id: 2, 
+      question: "What are characteristics of 70s/80s rock music?", 
+      options: [
+        "Strong guitar riffs and energetic rhythms", 
+        "Slow melodies and soft vocals", 
+        "Electronic beats and synths", 
+        "Jazz improvisation and swing"
+      ],
+      correctAnswer: "Strong guitar riffs and energetic rhythms"
+    },
+    { 
+      id: 3, 
+      question: "Listening to rock music can evoke what?", 
+      options: ["Excitement and nostalgia", "Hunger", "Sleepiness", "Anxiety"],
+      correctAnswer: "Excitement and nostalgia"
+    },
+    { 
+      id: 4, 
+      question: "Are songs from these bands still popular today?", 
+      options: ["Yes", "No", "Only in movies", "Only on radio"],
+      correctAnswer: "Yes"
+    },
+    { 
+      id: 5, 
+      question: "Which era of rock music is discussed?", 
+      options: ["70s and 80s", "60s", "90s", "2000s"],
+      correctAnswer: "70s and 80s"
+    }
   ];
 
   const mathProblems = [
@@ -73,7 +108,8 @@ export const TestRock = ({ studentEmail }) => {
     }
   }, [stage]);
 
-  const handleQuestionChange = (id, value) => setReadingAnswers({ ...readingAnswers, [id]: value });
+  const handleQuestionChange = (id, value) =>
+    setReadingAnswers({ ...readingAnswers, [id]: value });
 
   const handleProceedToMath = () => {
     readingTimeRef.current = Date.now() - readingStartTimeRef.current;
@@ -83,15 +119,22 @@ export const TestRock = ({ studentEmail }) => {
   const handleMathAnswer = (e) => {
     if (e.key === "Enter") {
       const value = e.target.value.trim();
-      if (!value || isNaN(Number(value))) return alert("Please enter a valid number.");
+      if (!value || isNaN(Number(value)))
+        return alert("Please enter a valid number.");
+
       const problem = mathProblems[currentMathIndex];
       const answerTime = Date.now() - mathQuestionStartTimeRef.current;
 
-      setMathAnswers(prev => [...prev, { ...problem, answer: Number(value), timeMs: answerTime }]);
+      setMathAnswers((prev) => [
+        ...prev,
+        { ...problem, answer: Number(value), timeMs: answerTime },
+      ]);
+
       e.target.value = "";
       mathQuestionStartTimeRef.current = Date.now();
 
-      if (currentMathIndex + 1 < mathProblems.length) setCurrentMathIndex(currentMathIndex + 1);
+      if (currentMathIndex + 1 < mathProblems.length)
+        setCurrentMathIndex(currentMathIndex + 1);
       else setStage("closing");
     }
   };
@@ -102,31 +145,41 @@ export const TestRock = ({ studentEmail }) => {
       const saveResults = async () => {
         const email = studentEmail || localStorage.getItem("studentEmail");
         if (!email) return;
-        const totalTimeMs = Math.min(Date.now() - startTimeRef.current, MAX_TIME_MS);
+
+        const totalTimeMs = Math.min(
+          Date.now() - startTimeRef.current,
+          MAX_TIME_MS
+        );
         const readingTimeMs = readingTimeRef.current || 0;
 
-        const readingResults = readingQuestions.map(q => ({
+        const readingResults = readingQuestions.map((q) => ({
           studentEmail: email.toLowerCase(),
           testName: "Rock",
           questionType: "reading",
           questionId: q.id,
-          status: readingAnswers[q.id] ? (readingAnswers[q.id] === q.options[0] ? "right" : "wrong") : "no_time",
+          status: readingAnswers[q.id]
+            ? readingAnswers[q.id] === q.correctAnswer
+              ? "right"
+              : "wrong"
+            : "no_time",
           totalTimeMs,
           readingTimeMs,
         }));
 
-        const answeredIds = mathAnswers.map(m => m.id);
-        const unanswered = mathProblems.filter(p => !answeredIds.includes(p.id)).map(p => ({
-          studentEmail: email.toLowerCase(),
-          testName: "Rock",
-          questionType: "math",
-          questionId: p.id,
-          status: "no_time",
-          totalTimeMs,
-          mathTimeMs: 0,
-        }));
+        const answeredIds = mathAnswers.map((m) => m.id);
+        const unanswered = mathProblems
+          .filter((p) => !answeredIds.includes(p.id))
+          .map((p) => ({
+            studentEmail: email.toLowerCase(),
+            testName: "Rock",
+            questionType: "math",
+            questionId: p.id,
+            status: "no_time",
+            totalTimeMs,
+            mathTimeMs: 0,
+          }));
 
-        const mathResults = mathAnswers.map(m => ({
+        const mathResults = mathAnswers.map((m) => ({
           studentEmail: email.toLowerCase(),
           testName: "Rock",
           questionType: "math",
@@ -142,16 +195,29 @@ export const TestRock = ({ studentEmail }) => {
           const res = await fetch("/api/saveTestResults", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ studentEmail: email, testName: "Rock", results: allResults }),
+            body: JSON.stringify({
+              studentEmail: email,
+              testName: "Rock",
+              results: allResults,
+            }),
           });
+
           const data = await res.json();
-          if (!data.success) console.error("Error saving test results:", data);
-        } catch (err) { console.error("Server error saving test results:", err); }
+          if (!data.success)
+            console.error("Error saving test results:", data);
+        } catch (err) {
+          console.error("Server error saving test results:", err);
+        }
 
         const currentTestId = 3;
-        const completed = parseInt(localStorage.getItem("completedTests") || "0", 10);
-        if (completed < currentTestId) localStorage.setItem("completedTests", currentTestId.toString());
+        const completed = parseInt(
+          localStorage.getItem("completedTests") || "0",
+          10
+        );
+        if (completed < currentTestId)
+          localStorage.setItem("completedTests", currentTestId.toString());
       };
+
       saveResults();
     }
   }, [stage]);
@@ -161,30 +227,39 @@ export const TestRock = ({ studentEmail }) => {
     <div className="relative min-h-screen bg-black text-white px-4 py-12 flex flex-col items-center">
       <StarBackground />
       <div className="relative z-10 w-full max-w-3xl space-y-8">
-
-        {/* Reading */}
         {stage === "reading" && (
           <div className="bg-gray-800/80 border border-purple-600/50 p-8 rounded-2xl shadow-xl space-y-4">
-            <h1 className="text-3xl font-bold text-center">Reading Comprehension</h1>
-            <p className="text-center">Read the paragraph below carefully. You will answer questions afterward.</p>
-            <p className="bg-gray-700/60 p-4 rounded text-left mt-2 mb-2">{paragraph}</p>
+            <h1 className="text-3xl font-bold text-center">
+              Reading Comprehension
+            </h1>
+            <p className="text-center">
+              Read the paragraph below carefully. You will answer questions
+              afterward.
+            </p>
+            <p className="bg-gray-700/60 p-4 rounded text-left mt-2 mb-2">
+              {paragraph}
+            </p>
             <div className="text-center">
-              <button onClick={() => setStage("questions")} className="cosmic-button mt-4 px-4 py-2">
+              <button
+                onClick={() => setStage("questions")}
+                className="cosmic-button mt-4 px-4 py-2"
+              >
                 Proceed to Questions
               </button>
             </div>
           </div>
         )}
 
-        {/* Questions */}
         {stage === "questions" && (
           <div className="bg-gray-800/80 border border-purple-600/50 p-8 rounded-2xl shadow-xl space-y-6 text-center">
             <h1 className="text-3xl font-bold mb-4">Reading Questions</h1>
-            {readingQuestions.map(q => (
+
+            {readingQuestions.map((q) => (
               <div key={q.id} className="space-y-2">
                 <p className="text-center">{q.question}</p>
+
                 <div className="space-y-1 text-left mx-auto max-w-md">
-                  {q.options.map(opt => (
+                  {q.options.map((opt) => (
                     <label key={opt} className="flex items-center space-x-2">
                       <input
                         type="radio"
@@ -200,10 +275,13 @@ export const TestRock = ({ studentEmail }) => {
                 </div>
               </div>
             ))}
+
             <div className="text-center">
               <button
                 onClick={handleProceedToMath}
-                disabled={readingQuestions.some(q => !readingAnswers[q.id])}
+                disabled={readingQuestions.some(
+                  (q) => !readingAnswers[q.id]
+                )}
                 className="cosmic-button mt-4 w-full px-4 py-2 disabled:opacity-50"
               >
                 Proceed to Math
@@ -212,14 +290,17 @@ export const TestRock = ({ studentEmail }) => {
           </div>
         )}
 
-        {/* Math */}
         {stage === "math" && (
           <div className="bg-gray-800/80 border border-purple-600/50 p-8 rounded-2xl shadow-xl space-y-4 text-center">
             <h1 className="text-3xl font-bold mb-2">Math Problems</h1>
-            <p>Answer each question. Press Enter after each answer. You cannot skip.</p>
+            <p>Answer each question. Press Enter after each answer.</p>
+
             <p className="mt-2">
-              Problem {currentMathIndex + 1} of {mathProblems.length}: {mathProblems[currentMathIndex].a} × {mathProblems[currentMathIndex].b} =
+              Problem {currentMathIndex + 1} of {mathProblems.length}:{" "}
+              {mathProblems[currentMathIndex].a} ×{" "}
+              {mathProblems[currentMathIndex].b} =
             </p>
+
             <input
               type="number"
               className="bg-gray-700/60 border border-purple-500 px-2 py-1 rounded w-full"
@@ -230,17 +311,21 @@ export const TestRock = ({ studentEmail }) => {
           </div>
         )}
 
-        {/* Closing */}
         {stage === "closing" && (
           <div className="bg-gray-800/80 border border-purple-600/50 p-8 rounded-2xl shadow-xl space-y-4 text-center">
             <h1 className="text-3xl font-bold">Test Complete</h1>
-            <p>Great job! You have finished this test. Proceed to the next test when ready.</p>
-            <button onClick={() => navigate("/studyhome")} className="cosmic-button mt-4 px-4 py-2">
+            <p>
+              Great job! You have finished this test. Proceed to the next test
+              when ready.
+            </p>
+            <button
+              onClick={() => navigate("/studyhome")}
+              className="cosmic-button mt-4 px-4 py-2"
+            >
               Proceed to Next Test
             </button>
           </div>
         )}
-
       </div>
     </div>
   );
